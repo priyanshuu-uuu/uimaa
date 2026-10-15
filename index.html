@@ -32,6 +32,12 @@
             background: #13091c;
             touch-action: none;
         }
+        /* Allow smooth vertical touch scrolling inside modals */
+        .scrollable-touch {
+            touch-action: pan-y !important;
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
+        }
         .font-poetic {
             font-family: 'Cormorant Garamond', Georgia, serif;
         }
@@ -72,7 +78,7 @@
             position: absolute;
             transform: translate(-50%, -100%);
             pointer-events: none;
-            z-index: 10;
+            z-index: 25;
             transition: opacity 0.15s ease;
             white-space: nowrap;
         }
@@ -168,14 +174,14 @@
         }
 
         /* Mobile Landscape Compactness */
-        @media screen and (max-height: 520px) {
+        @media screen and (max-height: 540px) {
             .landscape-compact-modal {
-                padding: 0.65rem 1.15rem !important;
-                max-height: 94vh;
-                overflow-y: auto;
+                padding: 0.65rem 1rem !important;
+                max-height: 92vh !important;
             }
             .landscape-compact-title {
-                font-size: 1.55rem !important;
+                font-size: 1.45rem !important;
+                line-height: 1.2 !important;
                 margin-bottom: 0.1rem !important;
             }
             .landscape-hide {
@@ -217,266 +223,292 @@
     <canvas id="game-canvas"></canvas>
 
     <!-- POETIC WHISPER FLOATING BANNER (Displays Haikus & Biome Entries) -->
-    <div id="poetic-banner" class="fixed top-16 md:top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none hidden">
-        <div class="glass-dark px-5 py-2 rounded-full border border-pink-300/60 text-center shadow-2xl">
-            <div id="poetic-biome-tag" class="text-[10px] md:text-xs uppercase tracking-widest text-amber-300 font-bold">🌸 Sakura Whispering Grove</div>
-            <div id="poetic-verse-text" class="font-poetic italic text-sm md:text-lg text-pink-100">
+    <div id="poetic-banner" class="fixed top-12 md:top-14 left-1/2 -translate-x-1/2 z-20 pointer-events-none hidden">
+        <div class="glass-dark px-4 py-1 md:px-5 md:py-1.5 rounded-full border border-pink-300/60 text-center shadow-xl">
+            <div id="poetic-biome-tag" class="text-[9px] md:text-[11px] uppercase tracking-widest text-amber-300 font-bold">🌸 Sakura Whispering Grove</div>
+            <div id="poetic-verse-text" class="font-poetic italic text-xs md:text-base text-pink-100">
                 "Drifting petals fall where unspoken words await..."
             </div>
         </div>
     </div>
 
+    <!-- DEDICATED CLEAR CONVERSATION SUBTITLE BANNER (Positioned cleanly above the bottom dock so it NEVER gets blocked!) -->
+    <div id="live-subtitle-pill" class="fixed bottom-14 sm:bottom-16 left-1/2 -translate-x-1/2 z-30 pointer-events-none hidden w-[84vw] max-w-md transition-all duration-200">
+        <div class="glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border border-pink-400/80 shadow-2xl text-center">
+            <div id="live-subtitle-speaker" class="text-[9px] md:text-[11px] font-game text-pink-300 uppercase tracking-wider">💃 Ria</div>
+            <div id="live-subtitle-text" class="font-poetic italic text-xs sm:text-sm md:text-base text-white leading-snug">
+                "Catch the wind first if you want to talk to me, Priyanshu! 😜🌸"
+            </div>
+        </div>
+    </div>
+
     <!-- INTERACTIVE ACTIVITY PROMPT PILL (Appears when near an Open-World Activity) -->
-    <div id="activity-prompt" class="fixed bottom-28 md:bottom-24 left-1/2 -translate-x-1/2 z-20 pointer-events-auto hidden">
-        <button id="btn-prompt-interact" class="glass-panel animate-pulse-glow px-4 py-2 md:px-5 md:py-2.5 rounded-2xl flex items-center gap-2.5 border-2 border-amber-400 text-pink-950 font-bold text-xs md:text-sm hover:scale-105 transition cursor-pointer">
-            <span id="activity-prompt-icon" class="text-lg md:text-xl">⛲</span>
+    <div id="activity-prompt" class="fixed bottom-28 sm:bottom-32 left-1/2 -translate-x-1/2 z-30 pointer-events-auto hidden">
+        <button id="btn-prompt-interact" class="glass-panel animate-pulse-glow px-3.5 py-1.5 md:px-5 md:py-2 rounded-2xl flex items-center gap-2 border-2 border-amber-400 text-pink-950 font-bold text-[11px] md:text-sm hover:scale-105 transition cursor-pointer shadow-xl">
+            <span id="activity-prompt-icon" class="text-base md:text-xl">⛲</span>
             <div class="text-left leading-tight">
                 <div id="activity-prompt-title" class="font-game text-pink-700">Wishing Fountain</div>
-                <div id="activity-prompt-sub" class="text-[10px] md:text-xs text-gray-600">Tap or Press [F] to make a wish (+18% Romance)</div>
+                <div id="activity-prompt-sub" class="text-[9px] md:text-xs text-gray-600">Tap here or Press [✨ ACT]</div>
             </div>
         </button>
     </div>
 
-    <!-- 2D Projected Character Name Tags, Floating Anime Emotes & Speech Bubbles -->
-    <div id="labels-container" class="fixed inset-0 pointer-events-none z-10 overflow-hidden">
+    <!-- 2D Projected Character Name Tags, Floating Anime Emotes & Speech Bubbles (z-25 so never behind HUD) -->
+    <div id="labels-container" class="fixed inset-0 pointer-events-none z-25 overflow-hidden">
         <!-- Priyanshu Label + Emote + Callout Bubble -->
         <div id="label-priyanshu" class="char-label flex flex-col items-center">
-            <div id="priyanshu-emote" class="hidden text-2xl md:text-3xl mb-0.5">💖</div>
-            <div id="priyanshu-bubble" class="hidden speech-bubble mb-1.5 px-3 py-1 rounded-2xl bg-indigo-950/90 text-pink-200 font-poetic italic text-xs md:text-sm shadow-xl border border-pink-400/70 max-w-[210px] text-center whitespace-normal leading-tight">
+            <div id="priyanshu-emote" class="hidden text-xl md:text-2xl mb-0.5">💖</div>
+            <div id="priyanshu-bubble" class="hidden speech-bubble mb-1 px-2.5 py-1 rounded-xl bg-indigo-950/95 text-pink-200 font-poetic italic text-[10px] md:text-xs shadow-xl border border-pink-400/70 max-w-[180px] md:max-w-[220px] text-center whitespace-normal leading-tight">
                 "Wait for me, Ria! I have something to tell you!"
             </div>
-            <div class="px-2.5 py-0.5 rounded-full bg-indigo-950/85 text-white font-game text-[10px] md:text-xs shadow-md border border-blue-400/80 flex items-center gap-1">
+            <div class="px-2 py-0.5 rounded-full bg-indigo-950/85 text-white font-game text-[9px] md:text-[11px] shadow-md border border-blue-400/80 flex items-center gap-1">
                 <span>🤵 Priyanshu</span>
-                <span id="priyanshu-ring-icon" class="text-xs">💍</span>
-                <span id="priyanshu-bouquet-icon" class="hidden text-xs">🌻</span>
+                <span id="priyanshu-ring-icon" class="text-[10px]">💍</span>
+                <span id="priyanshu-bouquet-icon" class="hidden text-[10px]">🌻</span>
             </div>
         </div>
 
         <!-- Ria Label + Emote + Teasing Speech Bubble -->
         <div id="label-ria" class="char-label flex flex-col items-center">
-            <div id="ria-emote" class="hidden text-2xl md:text-3xl mb-0.5">😜</div>
-            <div id="ria-bubble" class="speech-bubble mb-1.5 px-3 py-1 rounded-2xl bg-white text-pink-600 font-bold text-[11px] md:text-sm shadow-xl border-2 border-pink-300 max-w-[210px] md:max-w-[250px] text-center whitespace-normal leading-tight">
+            <div id="ria-emote" class="hidden text-xl md:text-2xl mb-0.5">😜</div>
+            <div id="ria-bubble" class="speech-bubble mb-1 px-2.5 py-1 rounded-xl bg-white/95 text-pink-600 font-bold text-[10px] md:text-xs shadow-xl border-2 border-pink-300 max-w-[185px] md:max-w-[230px] text-center whitespace-normal leading-tight">
                 Catch the wind first if you want to talk to me, Priyanshu! 😜🌸
             </div>
-            <div class="px-2.5 py-0.5 rounded-full bg-pink-700/90 text-white font-game text-[10px] md:text-xs shadow-md border border-pink-300 flex items-center gap-1">
+            <div class="px-2 py-0.5 rounded-full bg-pink-700/90 text-white font-game text-[9px] md:text-[11px] shadow-md border border-pink-300 flex items-center gap-1">
                 <span>💃 Ria</span>
                 <span id="ria-state-icon">✨</span>
             </div>
         </div>
     </div>
 
-    <!-- TOP HUD (Open-World Radar Mini-Map + Romance Meter + Stamina & Controls) -->
-    <div id="hud-overlay" class="fixed top-0 left-0 right-0 p-2 md:p-3.5 z-20 pointer-events-none hidden flex-row items-start justify-between gap-2">
-        <!-- Left: Mini-Map Radar + Romance / Closeness Meter -->
-        <div class="flex items-center gap-2 md:gap-3 pointer-events-auto">
+    <!-- ULTRA-CLEAN DE-CONGESTED TOP HUD -->
+    <div id="hud-overlay" class="fixed top-0 left-0 right-0 p-1.5 sm:p-2 md:p-3 z-20 pointer-events-none hidden flex-row items-start justify-between gap-1.5">
+        <!-- Left: Compact Radar + Romance Meter (Hidden in Couple Mode to keep screen spacious) -->
+        <div class="flex items-center gap-1.5 md:gap-2.5 pointer-events-auto">
             <!-- Live Open-World Mini-Map Canvas -->
-            <div class="glass-dark rounded-2xl p-1.5 border border-pink-400/60 shadow-xl flex flex-col items-center">
-                <canvas id="minimap-canvas" width="88" height="88" class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl"></canvas>
-                <span id="hud-biome-name" class="text-[8px] md:text-[10px] text-pink-200 font-bold tracking-wider mt-0.5 truncate max-w-[84px]">Sakura Grove</span>
+            <div class="glass-dark rounded-xl p-1 border border-pink-400/60 shadow-lg flex flex-col items-center">
+                <canvas id="minimap-canvas" width="76" height="76" class="w-12 h-12 sm:w-14 sm:h-14 md:w-20 md:h-20 rounded-lg"></canvas>
+                <span id="hud-biome-name" class="text-[7px] md:text-[9px] text-pink-200 font-bold tracking-wider mt-0.5 truncate max-w-[64px]">Sakura Grove</span>
             </div>
 
             <!-- Romance / Catch Progress Card -->
-            <div class="glass-panel rounded-2xl px-2.5 py-1.5 md:px-4 md:py-2.5 flex items-center gap-2 md:gap-3">
-                <div class="text-lg md:text-2xl animate-heartbeat">💘</div>
-                <div class="w-32 sm:w-44 md:w-56">
-                    <div class="flex justify-between items-center text-[9px] md:text-xs font-bold text-pink-950 mb-0.5">
-                        <span>ROMANCE METER</span>
+            <div id="hud-romance-card" class="glass-panel rounded-xl px-2 py-1 md:px-3.5 md:py-2 flex items-center gap-1.5 md:gap-2.5">
+                <div class="text-sm md:text-xl animate-heartbeat">💘</div>
+                <div class="w-24 sm:w-32 md:w-48">
+                    <div class="flex justify-between items-center text-[8px] md:text-[11px] font-bold text-pink-950 mb-0.5">
+                        <span>ROMANCE</span>
                         <span id="hud-distance" class="text-pink-600 font-game">24.0m</span>
                     </div>
-                    <div class="w-full h-2.5 md:h-3 bg-pink-100 rounded-full overflow-hidden border border-pink-300 p-0.5">
+                    <div class="w-full h-2 md:h-2.5 bg-pink-100 rounded-full overflow-hidden border border-pink-300 p-0.5">
                         <div id="hud-catch-bar" class="h-full bg-gradient-to-r from-pink-500 via-rose-500 to-amber-400 rounded-full transition-all duration-150" style="width: 12%;"></div>
                     </div>
-                    <div class="flex justify-between text-[8px] md:text-[10px] text-pink-800/80 font-semibold mt-0.5">
-                        <span id="hud-activities-done">✨ 0/5 Activities</span>
-                        <span id="hud-ria-mood">Mood: Playful 😜</span>
+                    <div class="flex justify-between text-[7px] md:text-[9px] text-pink-800/80 font-semibold mt-0.5">
+                        <span id="hud-activities-done">✨ 0/5</span>
+                        <span id="hud-ria-mood" class="truncate">Playful 😜</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right: Hearts, Stamina, Audio, Fullscreen & Instant Propose -->
-        <div class="glass-panel rounded-2xl px-2.5 py-1.5 md:px-3.5 md:py-2 flex items-center gap-2 md:gap-3 pointer-events-auto">
+        <!-- Right: Sleek Compact Pill for Petals, Dash, Sound & Mode Switch -->
+        <div class="glass-panel rounded-xl px-2 py-1 md:px-3 md:py-1.5 flex items-center gap-1.5 md:gap-2.5 pointer-events-auto">
             <div class="flex items-center gap-1">
-                <span class="text-sm md:text-lg">🌹</span>
-                <div class="leading-none">
-                    <div class="text-[8px] font-bold uppercase text-pink-800">Petals</div>
-                    <div id="hud-hearts" class="text-xs md:text-sm font-game text-rose-600">0</div>
-                </div>
+                <span class="text-xs md:text-base">🌹</span>
+                <div id="hud-hearts" class="text-[10px] md:text-xs font-game text-rose-600">0</div>
             </div>
 
-            <div class="w-16 sm:w-24 md:w-28">
-                <div class="flex justify-between text-[8px] md:text-[10px] font-bold text-indigo-950 mb-0.5">
-                    <span>⚡ DASH</span>
+            <div class="w-12 sm:w-16 md:w-24">
+                <div class="flex justify-between text-[7px] md:text-[9px] font-bold text-indigo-950 mb-0.5">
+                    <span>⚡</span>
                     <span id="hud-stamina-text">100%</span>
                 </div>
-                <div class="w-full h-2 bg-indigo-100 rounded-full overflow-hidden border border-indigo-300">
+                <div class="w-full h-1.5 bg-indigo-100 rounded-full overflow-hidden border border-indigo-300">
                     <div id="hud-stamina-bar" class="h-full bg-gradient-to-r from-blue-500 to-fuchsia-500 rounded-full transition-all duration-75" style="width: 100%;"></div>
                 </div>
             </div>
 
-            <button id="btn-fullscreen" class="p-1.5 rounded-xl bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border border-indigo-300 text-xs transition" title="Fullscreen Landscape">
+            <button id="btn-fullscreen" class="p-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border border-indigo-300 text-[10px] md:text-xs transition" title="Fullscreen Landscape">
                 ⛶
             </button>
-            <button id="btn-audio-toggle" class="p-1.5 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-700 border border-pink-300 text-xs transition" title="Toggle Sound">
+            <button id="btn-audio-toggle" class="p-1 rounded-lg bg-pink-100 hover:bg-pink-200 text-pink-700 border border-pink-300 text-[10px] md:text-xs transition" title="Toggle Sound">
                 🔊
             </button>
-            <button id="btn-instant-propose" class="px-2 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[9px] md:text-xs font-bold transition" title="Jump to Proposal Cutscene">
+            <button id="btn-instant-propose" class="px-1.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[8px] md:text-[11px] font-bold transition" title="Jump to Proposal Cutscene">
                 💍 Confess
             </button>
-            <button id="btn-couple-mode-quick" class="px-2 py-1.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white border border-pink-300 text-[9px] md:text-xs font-bold transition shadow-md" title="Unlock or Enter Post-Proposal Couple Mode">
-                💑 Couple Mode
+            <button id="btn-couple-mode-quick" class="px-1.5 py-1 rounded-lg bg-pink-500 hover:bg-pink-600 text-white border border-pink-300 text-[8px] md:text-[11px] font-bold transition shadow-sm" title="Unlock or Enter Post-Proposal Couple Mode">
+                💑 Couple
             </button>
         </div>
     </div>
 
-    <!-- POST-PROPOSAL COUPLE MODE TOP-CENTER ACTION BAR (Hand-Hold, Activity Sub-Controls & Teleport) -->
-    <div id="couple-action-bar" class="fixed top-14 md:top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-auto hidden flex-wrap items-center justify-center gap-1.5 md:gap-2.5 px-3 py-1.5 rounded-2xl glass-panel border-2 border-pink-400 shadow-2xl max-w-[96vw]">
+    <!-- ALWAYS-VISIBLE CHASE ROMANCE ACTIVITIES BAR (Bottom-Center Dock so you can see & tap all 5 Romantic Activities anytime!) -->
+    <div id="chase-activity-bar" class="fixed bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-auto hidden items-center justify-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-2xl glass-panel border-2 border-pink-400 shadow-2xl max-w-[58vw] sm:max-w-[64vw]">
+        <span class="text-[8px] md:text-[10px] font-game text-pink-800 uppercase tracking-wider hidden md:inline mr-0.5">✨ Activities:</span>
+        <button data-chase-act="0" id="btn-chase-act-0" class="px-1.5 py-1 sm:px-2 sm:py-1 rounded-xl bg-sky-100 hover:bg-sky-200 text-sky-900 border border-sky-300 font-bold text-[9px] sm:text-[11px] transition flex items-center gap-0.5 cursor-pointer shadow-sm" title="Visit & Trigger Starlight Wishing Fountain">
+            <span>⛲</span><span class="hidden sm:inline">Fountain</span>
+        </button>
+        <button data-chase-act="1" id="btn-chase-act-1" class="px-1.5 py-1 sm:px-2 sm:py-1 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-900 border border-orange-300 font-bold text-[9px] sm:text-[11px] transition flex items-center gap-0.5 cursor-pointer shadow-sm" title="Visit & Release Glowing Sky Lanterns">
+            <span>🏮</span><span class="hidden sm:inline">Lanterns</span>
+        </button>
+        <button data-chase-act="2" id="btn-chase-act-2" class="px-1.5 py-1 sm:px-2 sm:py-1 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-[9px] sm:text-[11px] transition flex items-center gap-0.5 cursor-pointer shadow-sm" title="Visit & Gather Golden Sunflower Bouquet">
+            <span>🌻</span><span class="hidden sm:inline">Flowers</span>
+        </button>
+        <button data-chase-act="3" id="btn-chase-act-3" class="px-1.5 py-1 sm:px-2 sm:py-1 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-900 border border-pink-300 font-bold text-[9px] sm:text-[11px] transition flex items-center gap-0.5 cursor-pointer shadow-sm" title="Visit & Ring the Sakura Romance Bell">
+            <span>🔔</span><span class="hidden sm:inline">Chime</span>
+        </button>
+        <button data-chase-act="4" id="btn-chase-act-4" class="px-1.5 py-1 sm:px-2 sm:py-1 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 font-bold text-[9px] sm:text-[11px] transition flex items-center gap-0.5 cursor-pointer shadow-sm" title="Visit & Awaken Firefly Swirl">
+            <span>✨</span><span class="hidden sm:inline">Fireflies</span>
+        </button>
+    </div>
+
+    <!-- POST-PROPOSAL COUPLE MODE DOCKED BAR (Positioned cleanly at bottom-center with z-30 so it NEVER blocks characters' faces!) -->
+    <div id="couple-action-bar" class="fixed bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-auto hidden flex-wrap items-center justify-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-2xl glass-panel border-2 border-pink-400 shadow-2xl max-w-[60vw] sm:max-w-[66vw]">
         <!-- Free-Roam Couple Controls -->
-        <div id="couple-roam-controls" class="flex flex-wrap items-center gap-1.5 md:gap-2">
-            <button id="btn-toggle-handhold" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-game text-[10px] md:text-xs shadow-md hover:scale-105 transition flex items-center gap-1 cursor-pointer">
-                <span>🤝 Hold Hands (H)</span>
+        <div id="couple-roam-controls" class="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5">
+            <button id="btn-toggle-handhold" class="px-2 py-1 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-game text-[9px] sm:text-xs shadow hover:scale-105 transition flex items-center gap-1 cursor-pointer">
+                <span>🤝 Hands: ON</span>
             </button>
-            <button id="btn-couple-banter" class="px-2.5 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 font-bold text-[10px] md:text-xs transition cursor-pointer">
-                💬 Sweet Banter
+            <button id="btn-couple-banter" class="px-2 py-1 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 font-bold text-[9px] sm:text-xs transition cursor-pointer">
+                💬 Talk
             </button>
-            <div class="hidden sm:flex items-center gap-1 text-[10px] text-pink-900 font-bold bg-pink-100/90 px-2.5 py-1 rounded-xl border border-pink-300">
-                <span>📍 Visit:</span>
-                <button data-goto="BENCH" class="underline hover:text-pink-600 px-1 cursor-pointer">🪑 Bench</button>
-                <button data-goto="SWING" class="underline hover:text-pink-600 px-1 cursor-pointer">🌳 Swing</button>
-                <button data-goto="BOAT" class="underline hover:text-pink-600 px-1 cursor-pointer">🚣‍♀️ Boat</button>
-                <button data-goto="PICNIC" class="underline hover:text-pink-600 px-1 cursor-pointer">🧺 Picnic</button>
-            </div>
+            <button data-goto="BENCH" class="px-2 py-1 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-900 border border-pink-300 font-bold text-[9px] sm:text-xs transition cursor-pointer shadow-sm">
+                🪑 Bench
+            </button>
+            <button data-goto="SWING" class="px-2 py-1 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-[9px] sm:text-xs transition cursor-pointer shadow-sm">
+                🌳 Swing
+            </button>
+            <button data-goto="BOAT" class="px-2 py-1 rounded-xl bg-sky-100 hover:bg-sky-200 text-sky-900 border border-sky-300 font-bold text-[9px] sm:text-xs transition cursor-pointer shadow-sm">
+                🚣‍♀️ Boat
+            </button>
+            <button data-goto="PICNIC" class="px-2 py-1 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 font-bold text-[9px] sm:text-xs transition cursor-pointer shadow-sm">
+                🧺 Picnic
+            </button>
         </div>
 
         <!-- Seated on Bench Sub-Controls -->
-        <div id="couple-bench-controls" class="hidden items-center gap-1.5 md:gap-2">
-            <span class="text-[10px] md:text-xs font-game text-pink-700 px-1">🪑 Scenic Bench</span>
-            <button id="btn-bench-talk" class="px-3 py-1.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-bold text-[10px] md:text-xs shadow transition cursor-pointer">
+        <div id="couple-bench-controls" class="hidden items-center gap-1 sm:gap-1.5">
+            <span class="text-[9px] md:text-xs font-game text-pink-700 hidden sm:inline">🪑 Bench</span>
+            <button id="btn-bench-talk" class="px-2.5 py-1 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-bold text-[9px] md:text-xs shadow transition cursor-pointer">
                 💬 Sweet Talk
             </button>
-            <button id="btn-bench-lean" class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-400 font-bold text-[10px] md:text-xs transition cursor-pointer">
-                🥰 Lean on Shoulder
+            <button id="btn-bench-lean" class="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-400 font-bold text-[9px] md:text-xs transition cursor-pointer">
+                🥰 Lean Shoulder
             </button>
-            <button id="btn-bench-exit" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white font-bold text-[10px] md:text-xs transition cursor-pointer">
-                🚶 Stand Up
+            <button id="btn-bench-exit" class="px-2 py-1 rounded-lg bg-slate-800 text-white font-bold text-[9px] md:text-xs transition cursor-pointer">
+                🚶 Stand
             </button>
         </div>
 
         <!-- Physics Tree Swing Sub-Controls -->
-        <div id="couple-swing-controls" class="hidden items-center gap-1.5 md:gap-2">
-            <span class="text-[10px] md:text-xs font-game text-pink-700 px-1">🌳 Sakura Swing</span>
-            <button id="btn-swing-push" class="btn-love px-3.5 py-1.5 rounded-xl text-white font-game text-[10px] md:text-xs shadow-lg cursor-pointer">
-                🤲 Push Swing [SPACE]
+        <div id="couple-swing-controls" class="hidden items-center gap-1 sm:gap-1.5">
+            <button id="btn-swing-push" class="btn-love px-2.5 py-1 rounded-lg text-white font-game text-[9px] md:text-xs shadow cursor-pointer">
+                🤲 Push Swing
             </button>
-            <button id="btn-swing-talk" class="px-2.5 py-1.5 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-800 border border-pink-300 font-bold text-[10px] md:text-xs transition cursor-pointer">
-                💬 Tease Ria
+            <button id="btn-swing-talk" class="px-2 py-1 rounded-lg bg-pink-100 hover:bg-pink-200 text-pink-800 border border-pink-300 font-bold text-[9px] md:text-xs transition cursor-pointer">
+                💬 Tease
             </button>
-            <span id="swing-height-meter" class="text-[10px] md:text-xs font-bold text-indigo-900 bg-indigo-100 px-2 py-1 rounded-lg border border-indigo-200">
-                Arc: 0°
+            <span id="swing-height-meter" class="text-[9px] md:text-xs font-bold text-indigo-900 bg-indigo-100 px-1.5 py-0.5 rounded border border-indigo-200">
+                0°
             </span>
-            <button id="btn-swing-exit" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white font-bold text-[10px] md:text-xs transition cursor-pointer">
-                🚶 Step Off
+            <button id="btn-swing-exit" class="px-2 py-1 rounded-lg bg-slate-800 text-white font-bold text-[9px] md:text-xs transition cursor-pointer">
+                🚶 Exit
             </button>
         </div>
 
         <!-- Physics River Boat Rafting Sub-Controls -->
-        <div id="couple-boat-controls" class="hidden items-center gap-1.5 md:gap-2">
-            <span class="text-[10px] md:text-xs font-game text-sky-700 px-1">🚣‍♀️ Koi River Rowboat (WASD / Stick to Row)</span>
-            <button id="btn-boat-splash" class="px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-[10px] md:text-xs shadow transition cursor-pointer">
-                💦 Playful Splash
+        <div id="couple-boat-controls" class="hidden items-center gap-1 sm:gap-1.5">
+            <span class="text-[9px] md:text-xs font-game text-sky-700 hidden sm:inline">🚣‍♀️ Rowboat</span>
+            <button id="btn-boat-splash" class="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-bold text-[9px] md:text-xs shadow transition cursor-pointer">
+                💦 Splash
             </button>
-            <button id="btn-boat-talk" class="px-3 py-1.5 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-800 border border-pink-300 font-bold text-[10px] md:text-xs transition cursor-pointer">
-                💬 Boat Talk
+            <button id="btn-boat-talk" class="px-2.5 py-1 rounded-lg bg-pink-100 hover:bg-pink-200 text-pink-800 border border-pink-300 font-bold text-[9px] md:text-xs transition cursor-pointer">
+                💬 Talk
             </button>
-            <button id="btn-boat-exit" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white font-bold text-[10px] md:text-xs transition cursor-pointer">
-                ⚓ Dock & Exit
+            <button id="btn-boat-exit" class="px-2 py-1 rounded-lg bg-slate-800 text-white font-bold text-[9px] md:text-xs transition cursor-pointer">
+                ⚓ Dock
             </button>
         </div>
 
         <!-- Stargazing Picnic Sub-Controls -->
-        <div id="couple-picnic-controls" class="hidden items-center gap-1.5 md:gap-2">
-            <span class="text-[10px] md:text-xs font-game text-emerald-800 px-1">🧺 Firefly Picnic</span>
-            <button id="btn-picnic-talk" class="px-3 py-1.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-bold text-[10px] md:text-xs shadow transition cursor-pointer">
-                🍵 Share Tea & Talk
+        <div id="couple-picnic-controls" class="hidden items-center gap-1 sm:gap-1.5">
+            <button id="btn-picnic-talk" class="px-2.5 py-1 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-bold text-[9px] md:text-xs shadow transition cursor-pointer">
+                🍵 Share Tea
             </button>
-            <button id="btn-picnic-lean" class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-400 font-bold text-[10px] md:text-xs transition cursor-pointer">
-                ✨ Gaze at Fireflies
+            <button id="btn-picnic-lean" class="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-400 font-bold text-[9px] md:text-xs transition cursor-pointer">
+                ✨ Lean & Gaze
             </button>
-            <button id="btn-picnic-exit" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-white font-bold text-[10px] md:text-xs transition cursor-pointer">
-                🚶 Stand Up
+            <button id="btn-picnic-exit" class="px-2 py-1 rounded-lg bg-slate-800 text-white font-bold text-[9px] md:text-xs transition cursor-pointer">
+                🚶 Stand
             </button>
         </div>
     </div>
 
     <!-- ERGONOMIC DUAL-THUMB MOBILE & DESKTOP CONTROLS OVERLAY -->
-    <div id="mobile-controls" class="fixed inset-x-0 bottom-0 p-2.5 sm:p-4 md:p-6 z-20 pointer-events-none hidden flex items-end justify-between">
-        <!-- LEFT THUMB: Multi-Touch Analog Joystick -->
+    <div id="mobile-controls" class="fixed inset-x-0 bottom-0 p-2 sm:p-3 md:p-5 z-20 pointer-events-none hidden flex items-end justify-between">
+        <!-- LEFT THUMB: Smooth Multi-Touch Analog Joystick -->
         <div class="flex flex-col items-center pointer-events-auto">
-            <div id="joystick-zone" class="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full bg-slate-900/40 backdrop-blur-md border-2 border-pink-300/80 relative flex items-center justify-center shadow-[0_0_25px_rgba(236,72,153,0.35)]">
-                <span class="absolute top-1.5 text-[9px] text-pink-200/80 font-bold">▲</span>
-                <span class="absolute bottom-1.5 text-[9px] text-pink-200/80 font-bold">▼</span>
-                <span class="absolute left-2 text-[9px] text-pink-200/80 font-bold">◀</span>
-                <span class="absolute right-2 text-[9px] text-pink-200/80 font-bold">▶</span>
-                <div class="w-12 h-12 rounded-full border border-white/25 pointer-events-none"></div>
-                <div id="joystick-knob" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-pink-400 via-rose-500 to-pink-700 shadow-lg border-2 border-white pointer-events-none flex items-center justify-center">
-                    <div class="w-4 h-4 rounded-full bg-white/40"></div>
+            <div id="joystick-zone" class="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-slate-900/45 backdrop-blur-md border-2 border-pink-300/80 relative flex items-center justify-center shadow-[0_0_20px_rgba(236,72,153,0.3)]">
+                <span class="absolute top-1 text-[8px] text-pink-200/80 font-bold">▲</span>
+                <span class="absolute bottom-1 text-[8px] text-pink-200/80 font-bold">▼</span>
+                <span class="absolute left-1.5 text-[8px] text-pink-200/80 font-bold">◀</span>
+                <span class="absolute right-1.5 text-[8px] text-pink-200/80 font-bold">▶</span>
+                <div class="w-10 h-10 rounded-full border border-white/25 pointer-events-none"></div>
+                <div id="joystick-knob" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-pink-400 via-rose-500 to-pink-700 shadow-lg border-2 border-white pointer-events-none flex items-center justify-center">
+                    <div class="w-3.5 h-3.5 rounded-full bg-white/40"></div>
                 </div>
             </div>
         </div>
 
-        <!-- CENTER: Desktop Keyboard Hints -->
-        <div class="hidden xl:flex glass-dark text-white/90 px-4 py-2 rounded-2xl text-xs gap-3.5 items-center pointer-events-auto mb-1">
-            <span><kbd class="px-1.5 py-0.5 bg-white/20 rounded">WASD</kbd> Roam</span>
-            <span><kbd class="px-1.5 py-0.5 bg-white/20 rounded">Shift</kbd> Dash ⚡</span>
-            <span><kbd class="px-1.5 py-0.5 bg-white/20 rounded">Space</kbd> Jump ⬆️</span>
-            <span><kbd class="px-1.5 py-0.5 bg-white/20 rounded">F</kbd> Activity ✨</span>
-            <span><kbd class="px-1.5 py-0.5 bg-white/20 rounded">E</kbd> Call Out 💬</span>
-            <span><kbd class="px-1.5 py-0.5 bg-white/20 rounded">Drag</kbd> Camera 🎥</span>
-        </div>
+        <!-- CENTER: Desktop Keyboard Hints (Hidden on mobile/tablet so the bottom Activity Dock is always unobstructed) -->
+        <div id="desktop-key-hints" class="hidden pointer-events-none"></div>
 
-        <!-- RIGHT THUMB: Ergonomic 4-Button Anime Action Diamond Cluster -->
-        <div class="grid grid-cols-2 gap-2 sm:gap-3 pointer-events-auto pr-1 pb-1">
+        <!-- RIGHT THUMB: Ergonomic 4-Button Anime Action Cluster -->
+        <div class="grid grid-cols-2 gap-1.5 sm:gap-2.5 pointer-events-auto pr-0.5 pb-0.5">
             <!-- CALL OUT / EMOTE BUTTON (Top-Left of Cluster) -->
-            <button id="btn-mobile-call" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600 text-white font-game shadow-[0_5px_16px_rgba(244,63,94,0.55)] border-2 border-white/90 flex flex-col items-center justify-center transition-transform select-none">
-                <span class="text-base sm:text-lg leading-none">💬</span>
-                <span class="text-[9px] sm:text-[10px] font-bold tracking-wider mt-0.5">CALL</span>
+            <button id="btn-mobile-call" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600 text-white font-game shadow-[0_4px_12px_rgba(244,63,94,0.5)] border-2 border-white/90 flex flex-col items-center justify-center transition-transform select-none">
+                <span class="text-sm sm:text-base leading-none">💬</span>
+                <span class="text-[8px] sm:text-[9px] font-bold tracking-wider mt-0.5">CALL</span>
             </button>
 
             <!-- INTERACT / ACTIVITY BUTTON (Top-Right of Cluster) -->
-            <button id="btn-mobile-act" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-white font-game shadow-[0_5px_16px_rgba(245,158,11,0.6)] border-2 border-white/90 flex flex-col items-center justify-center transition-transform select-none">
-                <span class="text-base sm:text-lg leading-none">✨</span>
-                <span class="text-[9px] sm:text-[10px] font-bold tracking-wider mt-0.5">ACT</span>
+            <button id="btn-mobile-act" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-white font-game shadow-[0_4px_12px_rgba(245,158,11,0.55)] border-2 border-white/90 flex flex-col items-center justify-center transition-transform select-none">
+                <span class="text-sm sm:text-base leading-none">✨</span>
+                <span class="text-[8px] sm:text-[9px] font-bold tracking-wider mt-0.5">ACT</span>
             </button>
 
             <!-- LOVE DASH BUTTON (Bottom-Left of Cluster) -->
-            <button id="btn-mobile-dash" class="w-15 h-15 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-fuchsia-600 text-white font-game shadow-[0_6px_20px_rgba(147,51,234,0.6)] border-2 border-white/90 flex flex-col items-center justify-center transition-transform select-none py-2">
-                <span class="text-lg sm:text-xl leading-none">⚡</span>
-                <span class="text-[9px] sm:text-[11px] font-bold tracking-wider mt-0.5">DASH</span>
+            <button id="btn-mobile-dash" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-fuchsia-600 text-white font-game shadow-[0_5px_16px_rgba(147,51,234,0.55)] border-2 border-white/90 flex flex-col items-center justify-center transition-transform select-none">
+                <span class="text-base sm:text-lg leading-none">⚡</span>
+                <span class="text-[8px] sm:text-[9px] font-bold tracking-wider mt-0.5">DASH</span>
             </button>
 
             <!-- JUMP BUTTON (Bottom-Right of Cluster) -->
-            <button id="btn-mobile-jump" class="w-15 h-15 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-pink-500 via-rose-500 to-red-600 text-white font-game shadow-[0_6px_20px_rgba(225,29,72,0.6)] border-2 border-white/90 flex flex-col items-center justify-center transition-transform select-none py-2">
-                <span class="text-lg sm:text-xl leading-none">⬆️</span>
-                <span class="text-[9px] sm:text-[11px] font-bold tracking-wider mt-0.5">JUMP</span>
+            <button id="btn-mobile-jump" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-pink-500 via-rose-500 to-red-600 text-white font-game shadow-[0_5px_16px_rgba(225,29,72,0.55)] border-2 border-white/90 flex flex-col items-center justify-center transition-transform select-none">
+                <span class="text-base sm:text-lg leading-none">⬆️</span>
+                <span class="text-[8px] sm:text-[9px] font-bold tracking-wider mt-0.5">JUMP</span>
             </button>
         </div>
     </div>
 
-    <!-- POETIC OPENING SCREEN (SPOILER-FREE: Only explains what Priyanshu must do!) -->
-    <div id="intro-modal" class="fixed inset-0 z-30 flex items-center justify-center p-3 md:p-4 bg-black/55 backdrop-blur-md">
-        <div class="glass-panel landscape-compact-modal max-w-xl w-full rounded-3xl p-5 md:p-7 text-center relative overflow-hidden border-4 border-pink-300">
-            <div class="text-xs md:text-sm font-poetic italic text-pink-700 tracking-widest uppercase mb-0.5">
-                ✨ An Interactive 3D Anime Romance ✨
+    <!-- POETIC OPENING SCREEN (Scrollable on all Mobile Landscape screens + Pinned Start Button!) -->
+    <div id="intro-modal" class="fixed inset-0 z-40 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-md scrollable-touch">
+        <div class="glass-panel landscape-compact-modal max-w-xl w-full max-h-[92vh] rounded-3xl p-4 sm:p-6 text-center relative flex flex-col justify-between border-4 border-pink-300 shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="shrink-0">
+                <div class="text-[10px] sm:text-xs font-poetic italic text-pink-700 tracking-widest uppercase">
+                    ✨ An Interactive 3D Anime Romance ✨
+                </div>
+                <h1 class="font-poetic landscape-compact-title text-2xl sm:text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-800">
+                    Priyanshu & Ria
+                </h1>
+                <p class="font-poetic italic text-xs sm:text-sm text-rose-800/90 mb-2">
+                    "Beneath the drifting sakura sky, one unspoken question waits upon the wind..."
+                </p>
             </div>
-            <h1 class="font-poetic landscape-compact-title text-3xl sm:text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-800 mb-1">
-                Priyanshu & Ria
-            </h1>
-            <p class="font-poetic italic text-sm md:text-base text-rose-800/90 mb-3">
-                "Beneath the drifting sakura sky, one unspoken question waits upon the wind..."
-            </p>
 
-            <!-- Strictly Instructions & Poetic Premise — ZERO spoilers about Ria's feelings -->
-            <div class="bg-pink-50/95 border border-pink-200 rounded-2xl p-3 md:p-4 text-left text-gray-700 text-xs md:text-sm space-y-2 mb-4 shadow-inner">
+            <!-- Scrollable Instructions Area (Touch-Scrollable so nothing is ever cut off!) -->
+            <div class="scrollable-touch bg-pink-50/95 border border-pink-200 rounded-2xl p-3 sm:p-4 text-left text-gray-700 text-xs sm:text-sm space-y-2 my-1.5 shadow-inner overflow-y-auto flex-1 min-h-0">
                 <p>
                     💍 <strong>Your Quest:</strong> <span class="text-indigo-700 font-bold">Priyanshu</span> carries a velvet ring box and a heart full of unspoken feelings for the ever-elusive, teasing <span class="text-pink-600 font-bold">Ria</span>—who darts away like a spring breeze whenever he draws near.
                 </p>
@@ -484,15 +516,16 @@
                     🗺️ <strong>What To Do:</strong> Roam freely across five poetic biomes—from the <em>Moonlit Wisteria Bridge</em> to <em>Golden Sunflower Hill</em>. Use your <strong>Mini-Map Radar</strong> to discover <strong>5 Romantic Activities (Press F / ✨ ACT)</strong> that enchant Ria, draw her closer, and fill the <strong>Romance Meter</strong>.
                 </p>
                 <p>
-                    🎯 <strong>The Moment of Truth:</strong> Call out to her (<strong>E / 💬 CALL</strong>), sprint with <strong>Dash ⚡</strong>, and catch up to Ria to kneel down, offer the ring, and discover what her heart truly holds.
+                    🎯 <strong>The Moment of Truth:</strong> Call out to her (<strong>E / 💬 CALL</strong>), sprint with <strong>Dash ⚡</strong>, and catch up to Ria to kneel down, offer the ring, and discover.
                 </p>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-2.5">
-                <button id="btn-start-landscape" class="sm:hidden bg-indigo-600 hover:bg-indigo-700 text-white font-game py-3 px-4 rounded-2xl text-sm shadow-lg flex items-center justify-center gap-2">
+            <!-- Pinned Action Buttons Footer (Always visible!) -->
+            <div class="shrink-0 pt-2 flex flex-col sm:flex-row gap-2">
+                <button id="btn-start-landscape" class="sm:hidden bg-indigo-600 hover:bg-indigo-700 text-white font-game py-2.5 px-4 rounded-xl text-xs shadow-lg flex items-center justify-center gap-1.5 cursor-pointer">
                     <span>📲 Fullscreen Landscape + Begin</span>
                 </button>
-                <button id="btn-start-game" class="btn-love flex-1 py-3 md:py-3.5 rounded-2xl text-white font-game text-base md:text-lg tracking-wide cursor-pointer">
+                <button id="btn-start-game" class="btn-love flex-1 py-2.5 sm:py-3 rounded-xl text-white font-game text-sm sm:text-base tracking-wide cursor-pointer shadow-lg">
                     Step Into the Wind 🌸
                 </button>
             </div>
@@ -500,35 +533,35 @@
     </div>
 
     <!-- PROPOSAL CUTSCENE & VISUAL NOVEL DIALOGUE OVERLAY -->
-    <div id="cutscene-overlay" class="fixed inset-0 z-30 pointer-events-none hidden flex-col justify-between p-3 md:p-6">
+    <div id="cutscene-overlay" class="fixed inset-0 z-30 pointer-events-none hidden flex-col justify-between p-2.5 sm:p-4 md:p-6">
         <!-- Top Cinematic Banner -->
         <div class="flex justify-between items-center w-full max-w-4xl mx-auto pointer-events-auto">
-            <div class="glass-dark px-4 py-1.5 md:px-5 md:py-2 rounded-full text-pink-200 font-poetic italic text-sm md:text-lg flex items-center gap-2">
+            <div class="glass-dark px-3.5 py-1 md:px-5 md:py-1.5 rounded-full text-pink-200 font-poetic italic text-xs sm:text-sm md:text-lg flex items-center gap-2">
                 <span>✨</span>
                 <span id="cutscene-stage-title">Where the Breeze Stands Still...</span>
                 <span>💍</span>
             </div>
-            <button id="btn-replay-top" class="hidden glass-panel px-3.5 py-1.5 rounded-full text-pink-700 font-bold text-xs hover:scale-105 transition">
+            <button id="btn-replay-top" class="hidden glass-panel px-3 py-1 rounded-full text-pink-700 font-bold text-xs hover:scale-105 transition">
                 🔄 Roam Again
             </button>
         </div>
 
-        <!-- Bottom Visual Novel Dialogue Box -->
-        <div class="w-full max-w-3xl mx-auto pointer-events-auto mb-1">
-            <div class="glass-dark rounded-3xl p-4 md:p-6 border-2 border-pink-400/75 shadow-2xl relative">
+        <!-- Bottom Visual Novel Dialogue Box (Compact & Crystal Clear) -->
+        <div class="w-full max-w-2xl mx-auto pointer-events-auto mb-0.5">
+            <div class="glass-dark rounded-2xl sm:rounded-3xl p-3 sm:p-4 md:p-5 border-2 border-pink-400/75 shadow-2xl relative">
                 <!-- Speaker Badge -->
-                <div id="dialogue-speaker" class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-game text-xs md:text-sm shadow-md -mt-7 mb-2 border border-white/40">
+                <div id="dialogue-speaker" class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-game text-[11px] md:text-sm shadow-md -mt-6 mb-1.5 border border-white/40">
                     🤵 Priyanshu
                 </div>
 
                 <!-- Dialogue Text -->
-                <p id="dialogue-text" class="font-poetic italic text-white text-base sm:text-lg md:text-xl font-medium leading-snug min-h-[3.0rem] md:min-h-[3.8rem]">
+                <p id="dialogue-text" class="font-poetic italic text-white text-sm sm:text-base md:text-xl font-medium leading-snug min-h-[2.4rem] sm:min-h-[3.2rem]">
                     "I finally caught up to you, Ria..."
                 </p>
 
                 <!-- Interactive Next Button Row -->
-                <div id="dialogue-actions" class="mt-3 flex flex-wrap justify-end gap-2.5">
-                    <button id="btn-dialogue-next" class="btn-love px-5 py-2 md:px-6 md:py-2.5 rounded-xl text-white font-game text-xs md:text-sm flex items-center gap-2 cursor-pointer">
+                <div id="dialogue-actions" class="mt-2 flex flex-wrap justify-end gap-2">
+                    <button id="btn-dialogue-next" class="btn-love px-4 py-1.5 sm:px-5 sm:py-2 rounded-xl text-white font-game text-xs sm:text-sm flex items-center gap-1.5 cursor-pointer">
                         <span>Continue</span>
                         <span>💖</span>
                     </button>
@@ -537,23 +570,23 @@
         </div>
     </div>
 
-    <!-- FINAL CELEBRATION CARD (Only shown AFTER the final cutscene reveal!) -->
-    <div id="victory-card" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 hidden max-w-md w-[92%] glass-panel landscape-compact-modal rounded-3xl p-5 md:p-7 text-center border-4 border-pink-400 shadow-2xl">
-        <div class="text-4xl md:text-5xl mb-1 animate-bounce">💍🌸🥂</div>
-        <h2 class="font-poetic text-2xl md:text-4xl font-bold text-pink-700 mb-1">
+    <!-- FINAL CELEBRATION CARD (Scrollable & Responsive on Mobile Landscape!) -->
+    <div id="victory-card" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 hidden max-w-md w-[92%] max-h-[90vh] scrollable-touch glass-panel landscape-compact-modal rounded-3xl p-4 sm:p-6 text-center border-4 border-pink-400 shadow-2xl">
+        <div class="text-3xl sm:text-4xl mb-1 animate-bounce">💍🌸🥂</div>
+        <h2 class="font-poetic text-xl sm:text-3xl font-bold text-pink-700 mb-0.5">
             Two Hearts, One Sky
         </h2>
-        <p class="text-pink-900 font-semibold text-xs md:text-sm mb-3">
+        <p class="text-pink-900 font-semibold text-[11px] sm:text-xs mb-2">
             Priyanshu & Ria — Beneath the Falling Blossoms 🌸
         </p>
-        <p class="font-poetic italic text-sm md:text-base text-gray-800 bg-white/85 p-3.5 rounded-2xl border border-pink-200 mb-4 leading-relaxed">
+        <p class="font-poetic italic text-xs sm:text-sm md:text-base text-gray-800 bg-white/85 p-3 rounded-2xl border border-pink-200 mb-3 leading-relaxed">
             "I only ran through the blossoms to see how far your heart would chase me, Priyanshu... Every step you took, my heart was already yours. Yes—forever and always!" — Ria 💕
         </p>
         <div class="flex flex-col sm:flex-row gap-2 justify-center">
-            <button id="btn-enter-couple-mode" class="btn-love px-5 py-3 rounded-xl text-white font-game text-xs md:text-sm cursor-pointer shadow-xl flex items-center justify-center gap-1.5">
-                <span>💑 Roam Together (Post-Proposal Couple Mode)</span>
+            <button id="btn-enter-couple-mode" class="btn-love px-4 py-2.5 rounded-xl text-white font-game text-xs sm:text-sm cursor-pointer shadow-xl flex items-center justify-center gap-1.5">
+                <span>💑 Roam Together (Couple Mode)</span>
             </button>
-            <button id="btn-play-again" class="px-4 py-2.5 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-800 font-bold text-xs md:text-sm border border-pink-300 transition cursor-pointer">
+            <button id="btn-play-again" class="px-3.5 py-2 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-800 font-bold text-xs sm:text-sm border border-pink-300 transition cursor-pointer">
                 🔄 Replay Chase
             </button>
         </div>
@@ -2536,6 +2569,21 @@
 
         const riaBubbleEl = document.getElementById('ria-bubble');
         const priyanshuBubbleEl = document.getElementById('priyanshu-bubble');
+        const liveSubtitlePill = document.getElementById('live-subtitle-pill');
+        const liveSubtitleSpeaker = document.getElementById('live-subtitle-speaker');
+        const liveSubtitleText = document.getElementById('live-subtitle-text');
+        let liveSubtitleTimer = null;
+
+        function showClearSubtitle(speakerLabel, text, duration = 4600) {
+            if (currentState === GAME_STATE.CUTSCENE || currentState === GAME_STATE.INTRO) return;
+            liveSubtitleSpeaker.textContent = speakerLabel;
+            liveSubtitleText.textContent = text;
+            liveSubtitlePill.classList.remove('hidden');
+            if (liveSubtitleTimer) clearTimeout(liveSubtitleTimer);
+            liveSubtitleTimer = setTimeout(() => {
+                liveSubtitlePill.classList.add('hidden');
+            }, duration);
+        }
 
         function triggerRiaTease(customText = null, emoteSymbol = '😜') {
             const text = customText || RIA_TEASES[Math.floor(Math.random() * RIA_TEASES.length)];
@@ -2544,6 +2592,7 @@
             void riaBubbleEl.offsetWidth;
             riaBubbleEl.classList.add('speech-bubble');
             showCharacterEmote('ria', emoteSymbol);
+            showClearSubtitle('💃 Ria', text, 4400);
             audio.playGiggleBubble();
         }
 
@@ -2572,38 +2621,71 @@
             }, 4700);
         }
 
-        // Player Call-Out / Emote Action (Press E or 💬 CALL)
-        let callCooldown = 0;
         function triggerPlayerCallOut() {
-            if (currentState !== GAME_STATE.CHASE || callCooldown > 0) return;
-            callCooldown = 3.2;
+            if (currentState !== GAME_STATE.CHASE) return;
             audio.playCallOut();
-
             const line = PRIYANSHU_CALLOUTS[Math.floor(Math.random() * PRIYANSHU_CALLOUTS.length)];
             priyanshuBubbleEl.textContent = line;
             priyanshuBubbleEl.classList.remove('hidden', 'speech-bubble');
             void priyanshuBubbleEl.offsetWidth;
             priyanshuBubbleEl.classList.add('speech-bubble');
-            setTimeout(() => priyanshuBubbleEl.classList.add('hidden'), 3200);
-
             showCharacterEmote('priyanshu', '💖');
-            emitHeartBurst(playerPhys.x, playerPhys.y + 2.2, playerPhys.z, 6);
+            showClearSubtitle('🤵 Priyanshu', line, 3600);
 
-            // Ria reacts cutely to Priyanshu calling her name: pauses & looks back!
-            riaPhys.behavior = 'WAIT_WINK';
-            riaPhys.behaviorTimer = 2.4;
-            catchProgress = Math.min(100, catchProgress + 4.5);
-            triggerRiaTease("Hehe, calling my name won't make me stop... well, maybe just for a second! 😉🌸", '🎵');
+            setTimeout(() => {
+                priyanshuBubbleEl.classList.add('hidden');
+            }, 3400);
+
+            // Calling out catches Ria's attention and slows her briefly
+            if (riaPhys.behavior === 'ROAM_EVADE') {
+                riaPhys.behavior = 'WAIT_WINK';
+                riaPhys.behaviorTimer = 2.6;
+                triggerRiaTease("Did you call my name, Priyanshu? Hehe, come a little closer then! 😉🌸", '🎵');
+            }
         }
 
-        // Player Open-World Activity Interaction (Press F or ✨ ACT)
-        function triggerNearbyActivity() {
-            if (currentState !== GAME_STATE.CHASE || !activeNearbyActivity) return;
-            const act = activeNearbyActivity;
-            if (act.completed) return;
+        // Player Open-World Activity Interaction (Press F or ✨ ACT, or tap any button in the bottom Activity Dock!)
+        function triggerNearbyActivity(forcedActivity = null) {
+            if (currentState !== GAME_STATE.CHASE) return;
+            let act = forcedActivity || activeNearbyActivity;
 
-            act.completed = true;
-            activitiesCompletedCount++;
+            // If player tapped ✨ ACT when not right inside a ring, automatically jump to the nearest uncompleted activity!
+            if (!act) {
+                let bestDist = Infinity;
+                for (const candidate of ACTIVITIES) {
+                    if (!candidate.completed) {
+                        const d = Math.hypot(playerPhys.x - candidate.x, playerPhys.z - candidate.z);
+                        if (d < bestDist) {
+                            bestDist = d;
+                            act = candidate;
+                        }
+                    }
+                }
+            }
+            if (!act) return;
+
+            // Move Priyanshu & Ria smoothly to the activity spot if triggered via the bottom Activity Dock
+            const distNow = Math.hypot(playerPhys.x - act.x, playerPhys.z - act.z);
+            if (distNow > act.radius) {
+                playerPhys.x = act.x;
+                playerPhys.z = act.z + 2.2;
+                playerPhys.y = getTerrainHeight(playerPhys.x, playerPhys.z);
+                riaPhys.x = act.x + 2.5;
+                riaPhys.z = act.z - 1.5;
+                riaPhys.y = getTerrainHeight(riaPhys.x, riaPhys.z);
+                updateCharacterTransforms();
+            }
+
+            if (!act.completed) {
+                act.completed = true;
+                activitiesCompletedCount++;
+                // Mark button as completed in the bottom Chase Activity Bar
+                const actIdx = ACTIVITIES.indexOf(act);
+                const btnEl = document.getElementById(`btn-chase-act-${actIdx}`);
+                if (btnEl) {
+                    btnEl.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-200');
+                }
+            }
             audio.playActivityChime();
 
             // Visual & Gameplay Rewards per Activity
@@ -2615,7 +2697,7 @@
             playerPhys.stamina = 100;
             riaPhys.speed = Math.max(8.2, riaPhys.speed - 0.35);
 
-            document.getElementById('hud-activities-done').textContent = `✨ ${activitiesCompletedCount}/5 Activities`;
+            document.getElementById('hud-activities-done').textContent = `✨ ${activitiesCompletedCount}/5`;
             showPoeticWhisper(`${act.icon} ${act.title}`, act.poem);
             showCharacterEmote('priyanshu', '✨');
 
@@ -2900,7 +2982,7 @@
             const rect = joystickZone.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
-            const maxRadius = rect.width * 0.36;
+            const maxRadius = rect.width * 0.38;
 
             let dx = clientX - centerX;
             let dy = clientY - centerY;
@@ -2912,8 +2994,14 @@
             }
 
             joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
-            joystickInput.x = dx / maxRadius;
-            joystickInput.y = dy / maxRadius;
+            // Smooth cubic response curve for fine, non-twitchy mobile steering
+            const normX = dx / maxRadius;
+            const normY = dy / maxRadius;
+            const mag = Math.hypot(normX, normY);
+            const curvedMag = mag < 0.08 ? 0 : Math.pow(mag, 1.25);
+            const scale = mag > 0.001 ? (curvedMag / mag) : 0;
+            joystickInput.x = normX * scale;
+            joystickInput.y = normY * scale;
         }
 
         function resetJoystick() {
@@ -3057,21 +3145,26 @@
 
         document.getElementById('btn-prompt-interact').addEventListener('click', handleActButtonPress);
 
-        // Camera Swipe / Drag on 3D Canvas
+        // Camera Swipe / Drag on 3D Canvas (Ignores touches on Joystick or UI Buttons!)
         let isDraggingCamera = false;
+        let cameraTouchId = null;
         let prevPointerX = 0;
         canvas.addEventListener('pointerdown', (e) => {
             isDraggingCamera = true;
+            cameraTouchId = e.pointerId;
             prevPointerX = e.clientX;
         });
         window.addEventListener('pointermove', (e) => {
-            if (!isDraggingCamera) return;
+            if (!isDraggingCamera || (cameraTouchId !== null && e.pointerId !== cameraTouchId)) return;
             const deltaX = e.clientX - prevPointerX;
             prevPointerX = e.clientX;
             cameraAzimuth -= deltaX * 0.0055;
         });
-        window.addEventListener('pointerup', () => {
-            isDraggingCamera = false;
+        window.addEventListener('pointerup', (e) => {
+            if (cameraTouchId === null || e.pointerId === cameraTouchId) {
+                isDraggingCamera = false;
+                cameraTouchId = null;
+            }
         });
 
         /***********************************************************************
@@ -3114,7 +3207,7 @@
                 speaker: "💃 Ria (Blushing Deeply & Smiling Through Tears 💖)",
                 badgeClass: "from-rose-500 to-amber-500",
                 stageTitle: "Her True Heart Revealed! 💍🥂",
-                text: "\"You dummy... I never ran away to escape you! 😭💖 I only ran because I wanted to see you chase me—because I've been in love with you from the very beginning! Yes, Priyanshu... put that ring on my finger! I'm yours forever!\"",
+                text: "\"You dummy... I never ran away to escape you! 😭💖 I only ran because I wanted to see you chase me—because I've been in love with you from the very beginning! Yes, Priyanshu... put that ring on my finger! I'm yours forever!(sapne suhaaane omfg)\"",
                 btnText: "Embrace & Celebrate Forever! 🎉💖",
                 action: "FINISH_PROPOSAL"
             }
@@ -3132,7 +3225,12 @@
 
             document.getElementById('hud-overlay').classList.add('hidden');
             document.getElementById('mobile-controls').classList.add('hidden');
+            document.getElementById('chase-activity-bar').classList.add('hidden');
+            document.getElementById('chase-activity-bar').classList.remove('flex');
+            document.getElementById('couple-action-bar').classList.add('hidden');
+            document.getElementById('couple-action-bar').classList.remove('flex');
             document.getElementById('activity-prompt').classList.add('hidden');
+            document.getElementById('live-subtitle-pill').classList.add('hidden');
             document.getElementById('ria-bubble').classList.add('hidden');
             document.getElementById('priyanshu-bubble').classList.add('hidden');
 
@@ -3147,16 +3245,21 @@
             const midZ = (playerPhys.z + riaPhys.z) * 0.5;
             const groundY = getTerrainHeight(midX, midZ);
 
+            // Place Priyanshu & Ria side-by-side facing each other so the camera views both profiles clearly
             playerPhys.x = midX - 0.95;
-            playerPhys.z = midZ + 0.3;
+            playerPhys.z = midZ;
             playerPhys.y = groundY;
 
             riaPhys.x = midX + 0.95;
-            riaPhys.z = midZ - 0.3;
+            riaPhys.z = midZ;
             riaPhys.y = groundY;
 
             playerPhys.yaw = Math.atan2(riaPhys.x - playerPhys.x, riaPhys.z - playerPhys.z);
             riaPhys.yaw = Math.atan2(playerPhys.x - riaPhys.x, playerPhys.z - riaPhys.z);
+
+            // Set initial camera angle perpendicular to the pair so Ria's back never blocks Priyanshu!
+            cameraAzimuth = 0;
+            cutsceneCameraAngle = 0.25;
 
             resetCharacterLimbs();
             if (playerPhys.hasBouquet) priyanshu.bouquetGroup.visible = true;
@@ -3311,6 +3414,10 @@
             const hud = document.getElementById('hud-overlay');
             hud.classList.remove('hidden');
             hud.classList.add('flex');
+            // Hide the Chase Romance Card & Chase Bar in Couple Mode so only the Couple Activity Dock is shown!
+            document.getElementById('hud-romance-card').classList.add('hidden');
+            document.getElementById('chase-activity-bar').classList.add('hidden');
+            document.getElementById('chase-activity-bar').classList.remove('flex');
 
             const coupleBar = document.getElementById('couple-action-bar');
             coupleBar.classList.remove('hidden');
@@ -3351,11 +3458,11 @@
             const btn = document.getElementById('btn-toggle-handhold');
             if (!btn) return;
             if (coupleState.holdingHands) {
-                btn.innerHTML = '<span>🤝 Holding Hands: ON (H)</span>';
-                btn.className = 'px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 text-white font-game text-[10px] md:text-xs shadow-md hover:scale-105 transition flex items-center gap-1 cursor-pointer';
+                btn.innerHTML = '<span>🤝 Hands: ON</span>';
+                btn.className = 'px-2.5 py-1 rounded-lg bg-gradient-to-r from-pink-500 to-rose-600 text-white font-game text-[9px] md:text-xs shadow hover:scale-105 transition flex items-center gap-1 cursor-pointer';
             } else {
-                btn.innerHTML = '<span>👐 Hold Hands: OFF (H)</span>';
-                btn.className = 'px-3 py-1.5 rounded-xl bg-slate-200 text-slate-800 font-game text-[10px] md:text-xs shadow hover:scale-105 transition flex items-center gap-1 cursor-pointer';
+                btn.innerHTML = '<span>👐 Hands: OFF</span>';
+                btn.className = 'px-2.5 py-1 rounded-lg bg-slate-200 text-slate-800 font-game text-[9px] md:text-xs shadow hover:scale-105 transition flex items-center gap-1 cursor-pointer';
             }
         }
 
@@ -3395,6 +3502,7 @@
             priyanshuBubbleEl.classList.add('speech-bubble');
             priyanshu.face.setState('happy', false);
             showCharacterEmote('priyanshu', '💬');
+            showClearSubtitle('🤵 Priyanshu', item.p, 3600);
 
             setTimeout(() => {
                 riaBubbleEl.textContent = item.r;
@@ -3403,8 +3511,9 @@
                 riaBubbleEl.classList.add('speech-bubble');
                 ria.face.setState(item.expr || 'love', false);
                 showCharacterEmote('ria', '💖');
+                showClearSubtitle('💃 Ria', item.r, 5200);
                 audio.playGiggleBubble();
-            }, 650);
+            }, 1400);
         }
 
         function triggerCoupleActivityInteract() {
@@ -3531,7 +3640,9 @@
                 showCharacterEmote('ria', '🥰');
                 showCharacterEmote('priyanshu', '💖');
                 emitHeartBurst((playerPhys.x + riaPhys.x) * 0.5, playerPhys.y + 2.2, (playerPhys.z + riaPhys.z) * 0.5, 16);
-                riaBubbleEl.textContent = "\"Your shoulder is the safest, warmest place in the whole world, Priyanshu... 🥰🌸\"";
+                const leanLine = "\"Your shoulder is the safest, warmest place in the whole world, Priyanshu... 🥰🌸\"";
+                riaBubbleEl.textContent = leanLine;
+                showClearSubtitle('💃 Ria', leanLine, 5000);
             } else {
                 ria.bodyPivot.rotation.z = 0;
                 ria.headGroup.rotation.z = 0;
@@ -3586,9 +3697,11 @@
             priyanshu.face.setState('surprised', false);
             showCharacterEmote('ria', '💦');
             showCharacterEmote('priyanshu', '😆');
-            riaBubbleEl.textContent = "\"Gotcha!! Hahaha, a little river splash cools you down after all that rowing, right? 💦😜\"";
+            const splashLine = "\"Gotcha!! Hahaha, a little river splash cools you down after all that rowing, right? 💦😜\"";
+            riaBubbleEl.textContent = splashLine;
             priyanshuBubbleEl.textContent = "\"Hey! Wait till we dock, Ria—you're not getting away with that splash! 😆💖\"";
             priyanshuBubbleEl.classList.remove('hidden');
+            showClearSubtitle('💃 Ria & 🤵 Priyanshu', splashLine, 4800);
         }
 
         function exitCoupleSubActivity() {
@@ -3629,9 +3742,19 @@
             document.getElementById('couple-action-bar').classList.remove('flex');
             animatedProps.handHoldHeartMesh.visible = false;
 
+            // Show the bottom-center Chase Activities Dock so all 5 activities are always visible!
+            const chaseBar = document.getElementById('chase-activity-bar');
+            chaseBar.classList.remove('hidden');
+            chaseBar.classList.add('flex');
+            ACTIVITIES.forEach((_, idx) => {
+                const btnEl = document.getElementById(`btn-chase-act-${idx}`);
+                if (btnEl) btnEl.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-200');
+            });
+
             const hud = document.getElementById('hud-overlay');
             hud.classList.remove('hidden');
             hud.classList.add('flex');
+            document.getElementById('hud-romance-card').classList.remove('hidden');
 
             document.getElementById('mobile-controls').classList.remove('hidden');
             document.getElementById('ria-bubble').classList.remove('hidden');
@@ -3648,13 +3771,22 @@
         document.getElementById('btn-play-again').addEventListener('click', beginChaseGameplay);
         document.getElementById('btn-replay-top').addEventListener('click', beginChaseGameplay);
 
+        // Always-Visible Chase Activities Dock Buttons (Tap any activity button to visit & activate it!)
+        document.querySelectorAll('[data-chase-act]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.getAttribute('data-chase-act'), 10);
+                if (ACTIVITIES[idx]) {
+                    triggerNearbyActivity(ACTIVITIES[idx]);
+                }
+            });
+        });
+
         // Post-Proposal Couple Mode Buttons
         document.getElementById('btn-enter-couple-mode').addEventListener('click', startPostProposalCoupleMode);
         document.getElementById('btn-couple-mode-quick').addEventListener('click', startPostProposalCoupleMode);
         document.getElementById('btn-toggle-handhold').addEventListener('click', toggleCoupleHandHold);
         document.getElementById('btn-couple-banter').addEventListener('click', () => triggerRealisticCoupleBanter());
 
-        // Quick-Teleport Pills in Couple Mode Bar so players can jump right to Bench, Swing, Boat, or Picnic
         document.querySelectorAll('[data-goto]').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const targetType = btn.getAttribute('data-goto');
@@ -3662,36 +3794,684 @@
             });
         });
 
-        // Sub-Activity Controls
+        // Bench Sub-Controls
         document.getElementById('btn-bench-talk').addEventListener('click', () => triggerRealisticCoupleBanter('BENCH'));
         document.getElementById('btn-bench-lean').addEventListener('click', toggleBenchLeanOnShoulder);
         document.getElementById('btn-bench-exit').addEventListener('click', exitCoupleSubActivity);
 
+        // Swing Sub-Controls
         document.getElementById('btn-swing-push').addEventListener('click', pushRiaOnSwing);
         document.getElementById('btn-swing-talk').addEventListener('click', () => triggerRealisticCoupleBanter('SWING'));
         document.getElementById('btn-swing-exit').addEventListener('click', exitCoupleSubActivity);
 
+        // Boat Sub-Controls
         document.getElementById('btn-boat-splash').addEventListener('click', triggerBoatPlayfulSplash);
         document.getElementById('btn-boat-talk').addEventListener('click', () => triggerRealisticCoupleBanter('BOAT'));
         document.getElementById('btn-boat-exit').addEventListener('click', exitCoupleSubActivity);
 
+        // Picnic Sub-Controls
         document.getElementById('btn-picnic-talk').addEventListener('click', () => triggerRealisticCoupleBanter('PICNIC'));
         document.getElementById('btn-picnic-lean').addEventListener('click', toggleBenchLeanOnShoulder);
         document.getElementById('btn-picnic-exit').addEventListener('click', exitCoupleSubActivity);
 
         document.getElementById('btn-instant-propose').addEventListener('click', () => {
+            audio.init();
             startProposalCutscene();
         });
 
-        const btnAudioToggle = document.getElementById('btn-audio-toggle');
-        btnAudioToggle.addEventListener('click', () => {
+        const btnAudio = document.getElementById('btn-audio-toggle');
+        btnAudio.addEventListener('click', () => {
+            audio.init();
             audio.enabled = !audio.enabled;
-            btnAudioToggle.textContent = audio.enabled ? '🔊' : '🔇';
+            btnAudio.textContent = audio.enabled ? '🔊' : '🔇';
         });
 
         /***********************************************************************
-         * 12. MAIN OPEN-WORLD PHYSICS, SECONDARY CLOTH MOTION & RENDER LOOP
+         * 12. BIOME DETECTION, COUPLE PHYSICS & ANIME SKELETAL KINEMATICS
          ***********************************************************************/
+        function checkBiomeAndActivities() {
+            // 1. Check which Poetic Biome Priyanshu is currently inside
+            let bestBiome = BIOMES[0];
+            let bestDist = Infinity;
+            for (const b of BIOMES) {
+                const d = Math.hypot(playerPhys.x - b.x, playerPhys.z - b.z);
+                if (d < b.radius && d < bestDist) {
+                    bestBiome = b;
+                    bestDist = d;
+                }
+            }
+            if (bestBiome && bestBiome.id !== currentBiomeId) {
+                currentBiomeId = bestBiome.id;
+                document.getElementById('hud-biome-name').textContent = bestBiome.shortName;
+                showPoeticWhisper(`🌸 ${bestBiome.name}`, bestBiome.verse);
+            }
+
+            const promptEl = document.getElementById('activity-prompt');
+
+            // 2. Check proximity to Couple Stations when in COUPLE_MODE
+            if (currentState === GAME_STATE.COUPLE_MODE) {
+                if (coupleState.subMode !== 'ROAM') {
+                    promptEl.classList.add('hidden');
+                    return;
+                }
+                let foundCoupleAct = null;
+                for (const cAct of COUPLE_ACTIVITIES) {
+                    const d = Math.hypot(playerPhys.x - cAct.x, playerPhys.z - cAct.z);
+                    if (d < cAct.radius) {
+                        foundCoupleAct = cAct;
+                        break;
+                    }
+                }
+                activeNearbyActivity = foundCoupleAct;
+                if (foundCoupleAct) {
+                    document.getElementById('activity-prompt-icon').textContent = foundCoupleAct.icon;
+                    document.getElementById('activity-prompt-title').textContent = foundCoupleAct.title;
+                    document.getElementById('activity-prompt-sub').textContent = foundCoupleAct.prompt;
+                    promptEl.classList.remove('hidden');
+                } else {
+                    promptEl.classList.add('hidden');
+                }
+                return;
+            }
+
+            // 3. Check proximity to the 5 Romantic Activities during CHASE mode
+            let foundAct = null;
+            for (const act of ACTIVITIES) {
+                if (act.completed) continue;
+                const d = Math.hypot(playerPhys.x - act.x, playerPhys.z - act.z);
+                if (d < act.radius) {
+                    foundAct = act;
+                    break;
+                }
+            }
+
+            activeNearbyActivity = foundAct;
+            if (foundAct && currentState === GAME_STATE.CHASE) {
+                document.getElementById('activity-prompt-icon').textContent = foundAct.icon;
+                document.getElementById('activity-prompt-title').textContent = foundAct.title;
+                document.getElementById('activity-prompt-sub').textContent = foundAct.prompt;
+                promptEl.classList.remove('hidden');
+            } else {
+                promptEl.classList.add('hidden');
+            }
+        }
+
+        function updateCoupleModePhysics(dt, elapsed) {
+            // Periodic natural affectionate banter while enjoying Couple Mode
+            coupleState.banterTimer -= dt;
+            if (coupleState.banterTimer <= 0) {
+                coupleState.banterTimer = 11.5 + Math.random() * 5.0;
+                triggerRealisticCoupleBanter();
+            }
+
+            const camForwardX = -Math.sin(cameraAzimuth);
+            const camForwardZ = -Math.cos(cameraAzimuth);
+            const camRightX = Math.cos(cameraAzimuth);
+            const camRightZ = -Math.sin(cameraAzimuth);
+
+            let inputX = joystickInput.x;
+            let inputZ = joystickInput.y;
+            if (keys.up) inputZ -= 1;
+            if (keys.down) inputZ += 1;
+            if (keys.left) inputX -= 1;
+            if (keys.right) inputX += 1;
+
+            const mag = Math.hypot(inputX, inputZ);
+            if (mag > 1) {
+                inputX /= mag;
+                inputZ /= mag;
+            }
+
+            // SUB-MODE A: HAND-IN-HAND WALKING / FREE ROAM
+            if (coupleState.subMode === 'ROAM') {
+                const moveDirX = inputX * camRightX + (-inputZ) * camForwardX;
+                const moveDirZ = inputX * camRightZ + (-inputZ) * camForwardZ;
+
+                const isDashing = keys.dash && mag > 0.08 && !coupleState.holdingHands;
+                const walkSpeed = coupleState.holdingHands ? 8.2 : (isDashing ? playerPhys.dashSpeed : playerPhys.baseSpeed);
+
+                playerPhys.vx += (moveDirX * walkSpeed - playerPhys.vx) * Math.min(1, dt * 10);
+                playerPhys.vz += (moveDirZ * walkSpeed - playerPhys.vz) * Math.min(1, dt * 10);
+                playerPhys.x += playerPhys.vx * dt;
+                playerPhys.z += playerPhys.vz * dt;
+
+                if (!playerPhys.onGround) {
+                    playerPhys.vy -= 21.0 * dt;
+                    playerPhys.y += playerPhys.vy * dt;
+                }
+                resolveObstacleCollisions(playerPhys);
+                const groundH = getTerrainHeight(playerPhys.x, playerPhys.z);
+                if (playerPhys.y <= groundH) {
+                    playerPhys.y = groundH;
+                    playerPhys.vy = 0;
+                    playerPhys.onGround = true;
+                }
+
+                const speedMag = Math.hypot(playerPhys.vx, playerPhys.vz);
+                if (speedMag > 0.25) {
+                    const targetYaw = Math.atan2(playerPhys.vx, playerPhys.vz);
+                    let diff = targetYaw - playerPhys.yaw;
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+                    playerPhys.yaw += diff * Math.min(1, dt * 12);
+                    playerPhys.animTime += dt * speedMag * 1.45;
+                } else {
+                    playerPhys.animTime += dt * 2.0;
+                }
+
+                // Position Ria right beside Priyanshu's left hand when Holding Hands
+                const sideOffset = coupleState.holdingHands ? 0.76 : 1.35;
+                const rightVecX = -Math.cos(playerPhys.yaw);
+                const rightVecZ = Math.sin(playerPhys.yaw);
+                const targetRiaX = playerPhys.x + rightVecX * sideOffset;
+                const targetRiaZ = playerPhys.z + rightVecZ * sideOffset;
+
+                riaPhys.vx = (targetRiaX - riaPhys.x) * 8.5;
+                riaPhys.vz = (targetRiaZ - riaPhys.z) * 8.5;
+                riaPhys.x += riaPhys.vx * dt;
+                riaPhys.z += riaPhys.vz * dt;
+                riaPhys.y = getTerrainHeight(riaPhys.x, riaPhys.z);
+
+                let yawDiff = playerPhys.yaw - riaPhys.yaw;
+                while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
+                while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
+                riaPhys.yaw += yawDiff * Math.min(1, dt * 10);
+                riaPhys.animTime = playerPhys.animTime;
+
+                animateRunCycle(priyanshu, speedMag, playerPhys.animTime, false);
+                animateRunCycle(ria, speedMag, riaPhys.animTime, true);
+
+                // Override inner arms to clasp hands together with a floating heart!
+                if (coupleState.holdingHands) {
+                    priyanshu.leftArm.shoulderPivot.rotation.set(-0.18, 0, -0.36);
+                    priyanshu.leftArm.elbowPivot.rotation.set(-0.25, 0, 0);
+                    ria.rightArm.shoulderPivot.rotation.set(-0.18, 0, 0.36);
+                    ria.rightArm.elbowPivot.rotation.set(-0.25, 0, 0);
+
+                    // Glance lovingly at each other while strolling
+                    priyanshu.headGroup.rotation.y = 0.22 + Math.sin(elapsed * 1.5) * 0.08;
+                    ria.headGroup.rotation.y = -0.22 - Math.sin(elapsed * 1.5) * 0.08;
+                    priyanshu.face.setState('love', false);
+                    ria.face.setState('love', false);
+
+                    if (animatedProps.handHoldHeartMesh) {
+                        animatedProps.handHoldHeartMesh.visible = true;
+                        animatedProps.handHoldHeartMesh.position.set(
+                            (playerPhys.x + riaPhys.x) * 0.5,
+                            playerPhys.y + 1.42 + Math.sin(elapsed * 4) * 0.06,
+                            (playerPhys.z + riaPhys.z) * 0.5
+                        );
+                        animatedProps.handHoldHeartMesh.rotation.y = elapsed * 2.4;
+                    }
+                } else if (animatedProps.handHoldHeartMesh) {
+                    animatedProps.handHoldHeartMesh.visible = false;
+                }
+
+                checkBiomeAndActivities();
+                updateCharacterTransforms();
+                return;
+            }
+
+            // SUB-MODE B: SCENIC BENCH OR FIREFLY PICNIC SITTING
+            if (coupleState.subMode === 'BENCH' || coupleState.subMode === 'PICNIC') {
+                // Playful synchronized leg dangle on the bench
+                if (coupleState.subMode === 'BENCH') {
+                    const dangle = Math.sin(elapsed * 2.8) * 0.16;
+                    priyanshu.leftLeg.kneePivot.rotation.x = 1.48 + dangle;
+                    priyanshu.rightLeg.kneePivot.rotation.x = 1.48 - dangle;
+                    ria.leftLeg.kneePivot.rotation.x = 1.48 - dangle;
+                    ria.rightLeg.kneePivot.rotation.x = 1.48 + dangle;
+                }
+                if (!coupleState.headOnShoulder) {
+                    priyanshu.headGroup.rotation.y = 0.25 + Math.sin(elapsed * 1.2) * 0.08;
+                    ria.headGroup.rotation.y = -0.25 - Math.sin(elapsed * 1.2) * 0.08;
+                }
+                updateCharacterTransforms();
+                return;
+            }
+
+            // SUB-MODE C: REAL PENDULUM TREE SWING PHYSICS
+            if (coupleState.subMode === 'SWING') {
+                // Non-linear pendulum differential equation: alpha = -(g/L)*sin(theta) - damping*omega
+                const alpha = -(coupleState.swingGravity / coupleState.swingLength) * Math.sin(coupleState.swingTheta) - 0.18 * coupleState.swingOmega;
+                coupleState.swingOmega += alpha * dt;
+                coupleState.swingTheta += coupleState.swingOmega * dt;
+
+                // Allow player to also push with Up/W key
+                if (keys.up && coupleState.swingPushAnimTimer <= 0 && coupleState.swingTheta < 0.05) {
+                    pushRiaOnSwing();
+                }
+                if (coupleState.swingPushAnimTimer > 0) {
+                    coupleState.swingPushAnimTimer -= dt;
+                }
+
+                if (animatedProps.swingSeatPivot) {
+                    animatedProps.swingSeatPivot.rotation.x = coupleState.swingTheta;
+                }
+
+                // Update Swing Arc UI Meter
+                const deg = Math.round(Math.abs(coupleState.swingTheta) * (180 / Math.PI));
+                document.getElementById('swing-height-meter').textContent = `Arc: ${deg}°`;
+
+                // Position Ria dynamically on the swinging seat along the arc
+                const sw = COUPLE_ACTIVITIES[1];
+                const swBaseY = getTerrainHeight(sw.x, sw.z);
+                const pivotY = swBaseY + 4.8;
+                const L = coupleState.swingLength;
+
+                riaPhys.x = sw.x;
+                riaPhys.y = pivotY - L * Math.cos(coupleState.swingTheta) - 1.15;
+                riaPhys.z = sw.z - L * Math.sin(coupleState.swingTheta);
+                riaPhys.yaw = 0; // Facing South (+Z)
+
+                applySeatedCharacterPose(ria, true);
+                ria.bodyPivot.rotation.x = coupleState.swingTheta * 0.85;
+                // Ria's arms hold the twin swing ropes
+                ria.leftArm.shoulderPivot.rotation.set(-0.85, 0, 0.18);
+                ria.leftArm.elbowPivot.rotation.set(-0.65, 0, 0);
+                ria.rightArm.shoulderPivot.rotation.set(-0.85, 0, -0.18);
+                ria.rightArm.elbowPivot.rotation.set(-0.65, 0, 0);
+                // Ria's legs kick playfully with the swing velocity
+                const legKick = Math.sin(coupleState.swingTheta * 1.8) * 0.45;
+                ria.leftLeg.kneePivot.rotation.x = 1.25 - legKick;
+                ria.rightLeg.kneePivot.rotation.x = 1.25 - legKick;
+                // Secondary hair & ribbon wind physics on the swing!
+                ria.ponytailPivot.rotation.x = Math.max(-0.6, coupleState.swingOmega * 0.35);
+                ria.ribbonPivot.rotation.x = Math.max(-0.5, coupleState.swingOmega * 0.32);
+
+                if (deg > 35) {
+                    ria.face.setState('love', false);
+                } else {
+                    ria.face.setState('wink_tongue', false);
+                }
+
+                // Position Priyanshu standing behind the swing pushing Ria
+                playerPhys.x = sw.x;
+                playerPhys.z = sw.z - 2.35;
+                playerPhys.y = swBaseY;
+                playerPhys.yaw = 0; // Facing Ria's back (+Z)
+
+                const pushReach = coupleState.swingPushAnimTimer > 0 ? Math.sin(coupleState.swingPushAnimTimer * Math.PI * 1.8) * 0.95 : 0.25;
+                priyanshu.bodyPivot.position.set(0, 0, 0);
+                priyanshu.bodyPivot.rotation.set(pushReach * 0.18, 0, 0);
+                priyanshu.leftArm.shoulderPivot.rotation.set(-0.55 - pushReach, 0, 0.12);
+                priyanshu.rightArm.shoulderPivot.rotation.set(-0.55 - pushReach, 0, -0.12);
+                priyanshu.leftLeg.hipPivot.position.set(0.21, 1.12, 0);
+                priyanshu.rightLeg.hipPivot.position.set(-0.21, 1.12, 0);
+                priyanshu.leftLeg.hipPivot.rotation.x = -0.15;
+                priyanshu.rightLeg.hipPivot.rotation.x = 0.20;
+                priyanshu.leftLeg.kneePivot.rotation.x = 0.15;
+                priyanshu.rightLeg.kneePivot.rotation.x = 0.15;
+                priyanshu.face.setState('love', false);
+
+                updateCharacterTransforms();
+                return;
+            }
+
+            // SUB-MODE D: KOI RIVER ROWBOAT HYDRODYNAMICS & OAR KINEMATICS
+            if (coupleState.subMode === 'BOAT') {
+                const forwardInput = -inputZ; // W / Up rows forward
+                const turnInput = -inputX;    // A / D steers boat yaw
+
+                coupleState.boatOmega += (turnInput * 1.65 - coupleState.boatOmega) * Math.min(1, dt * 4.5);
+                coupleState.boatYaw += coupleState.boatOmega * dt;
+
+                const dirX = Math.sin(coupleState.boatYaw);
+                const dirZ = Math.cos(coupleState.boatYaw);
+
+                const thrust = forwardInput * 6.8;
+                coupleState.boatVx += (dirX * thrust - coupleState.boatVx * 1.45) * dt;
+                coupleState.boatVz += (dirZ * thrust - coupleState.boatVz * 1.45) * dt;
+
+                coupleState.boatX += coupleState.boatVx * dt;
+                coupleState.boatZ += coupleState.boatVz * dt;
+
+                // Keep Rowboat safely within the Koi River channel (x: 72..84, z: -42..68)
+                coupleState.boatX = Math.max(72.2, Math.min(83.8, coupleState.boatX));
+                coupleState.boatZ = Math.max(-42, Math.min(68, coupleState.boatZ));
+
+                const boatSpeed = Math.hypot(coupleState.boatVx, coupleState.boatVz);
+                if (boatSpeed > 0.15 || Math.abs(turnInput) > 0.1) {
+                    coupleState.oarRowPhase += dt * (3.2 + boatSpeed * 0.8);
+                }
+
+                // Update 3D Rowboat transform with realistic wave buoyancy pitch & roll
+                const bg = animatedProps.rowboatGroup;
+                const waveBob = Math.sin(elapsed * 2.6) * 0.045;
+                const wavePitch = Math.sin(elapsed * 2.1) * 0.035 + (thrust * 0.006);
+                const waveRoll = Math.cos(elapsed * 1.9) * 0.04 - coupleState.boatOmega * 0.08;
+
+                if (bg) {
+                    bg.position.set(coupleState.boatX, 0.18 + waveBob, coupleState.boatZ);
+                    bg.rotation.set(wavePitch, coupleState.boatYaw, waveRoll);
+                }
+
+                // Animate Dual Articulated Oars
+                const oarSweep = Math.sin(coupleState.oarRowPhase) * 0.55;
+                const oarDip = Math.cos(coupleState.oarRowPhase) * 0.22;
+                if (animatedProps.leftOarPivot && animatedProps.rightOarPivot) {
+                    animatedProps.leftOarPivot.rotation.set(oarDip, oarSweep, 0);
+                    animatedProps.rightOarPivot.rotation.set(oarDip, -oarSweep, 0);
+                }
+
+                // Spawn subtle water wake ripples while rowing
+                if (boatSpeed > 0.6 && Math.random() < 0.22) {
+                    const wake = new THREE.Mesh(
+                        new THREE.RingGeometry(0.7, 0.95, 20),
+                        new THREE.MeshBasicMaterial({ color: 0xbae6fd, side: THREE.DoubleSide, transparent: true, opacity: 0.55 })
+                    );
+                    wake.rotation.x = -Math.PI / 2;
+                    wake.position.set(coupleState.boatX, 0.09, coupleState.boatZ);
+                    scene.add(wake);
+                    animatedProps.bellWaveRings.push({ mesh: wake, scale: 1, alpha: 0.55 });
+                }
+
+                // Seat Priyanshu on the rower bench (-0.45) facing Ria on the passenger bench (+0.85)
+                const sinY = Math.sin(coupleState.boatYaw);
+                const cosY = Math.cos(coupleState.boatYaw);
+
+                playerPhys.x = coupleState.boatX - sinY * 0.45;
+                playerPhys.z = coupleState.boatZ - cosY * 0.45;
+                playerPhys.y = 0.34 + waveBob;
+                playerPhys.yaw = coupleState.boatYaw;
+
+                riaPhys.x = coupleState.boatX + sinY * 0.85;
+                riaPhys.z = coupleState.boatZ + cosY * 0.85;
+                riaPhys.y = 0.34 + waveBob;
+                riaPhys.yaw = coupleState.boatYaw + Math.PI; // Facing Priyanshu!
+
+                applySeatedCharacterPose(priyanshu, false);
+                applySeatedCharacterPose(ria, true);
+
+                // Priyanshu's upper body & arms row in sync with the oars
+                priyanshu.bodyPivot.rotation.x = -0.08 + oarSweep * 0.28;
+                priyanshu.leftArm.shoulderPivot.rotation.set(-0.75 + oarSweep * 0.55, 0, 0.25);
+                priyanshu.rightArm.shoulderPivot.rotation.set(-0.75 + oarSweep * 0.55, 0, -0.25);
+
+                updateCharacterTransforms();
+                return;
+            }
+        }
+
+        function updateChasePhysics(dt, elapsed) {
+            const camForwardX = -Math.sin(cameraAzimuth);
+            const camForwardZ = -Math.cos(cameraAzimuth);
+            const camRightX = Math.cos(cameraAzimuth);
+            const camRightZ = -Math.sin(cameraAzimuth);
+
+            let inputX = joystickInput.x;
+            let inputZ = joystickInput.y;
+            if (keys.up) inputZ -= 1;
+            if (keys.down) inputZ += 1;
+            if (keys.left) inputX -= 1;
+            if (keys.right) inputX += 1;
+
+            const mag = Math.hypot(inputX, inputZ);
+            if (mag > 1) {
+                inputX /= mag;
+                inputZ /= mag;
+            }
+
+            const moveDirX = inputX * camRightX + (-inputZ) * camForwardX;
+            const moveDirZ = inputX * camRightZ + (-inputZ) * camForwardZ;
+
+            let isDashing = false;
+            if (keys.dash && playerPhys.stamina > 5 && mag > 0.1) {
+                isDashing = true;
+                playerPhys.stamina = Math.max(0, playerPhys.stamina - 30 * dt);
+                if (Math.random() < 0.38) {
+                    emitHeartBurst(playerPhys.x, playerPhys.y + 0.6, playerPhys.z, 1);
+                }
+            } else {
+                playerPhys.stamina = Math.min(100, playerPhys.stamina + 20 * dt);
+            }
+
+            // Golden Sunflower Bouquet emits a romantic golden petal trail when running!
+            if (playerPhys.hasBouquet && mag > 0.2 && Math.random() < 0.25) {
+                emitHeartBurst(playerPhys.x, playerPhys.y + 0.9, playerPhys.z, 1);
+            }
+
+            const targetSpeed = isDashing ? playerPhys.dashSpeed : playerPhys.baseSpeed;
+            const desiredVx = moveDirX * targetSpeed;
+            const desiredVz = moveDirZ * targetSpeed;
+
+            playerPhys.vx += (desiredVx - playerPhys.vx) * Math.min(1, dt * 10);
+            playerPhys.vz += (desiredVz - playerPhys.vz) * Math.min(1, dt * 10);
+
+            playerPhys.x += playerPhys.vx * dt;
+            playerPhys.z += playerPhys.vz * dt;
+
+            if (!playerPhys.onGround) {
+                playerPhys.vy -= 21.0 * dt;
+                playerPhys.y += playerPhys.vy * dt;
+            }
+
+            resolveObstacleCollisions(playerPhys);
+            const pGround = getTerrainHeight(playerPhys.x, playerPhys.z);
+            if (playerPhys.y <= pGround) {
+                playerPhys.y = pGround;
+                playerPhys.vy = 0;
+                playerPhys.onGround = true;
+            }
+
+            const speedMag = Math.hypot(playerPhys.vx, playerPhys.vz);
+            if (speedMag > 0.3) {
+                const targetYaw = Math.atan2(playerPhys.vx, playerPhys.vz);
+                let diff = targetYaw - playerPhys.yaw;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                playerPhys.yaw += diff * Math.min(1, dt * 13);
+                playerPhys.animTime += dt * speedMag * 1.45;
+            } else {
+                playerPhys.animTime += dt * 2.0;
+            }
+
+            animateRunCycle(priyanshu, speedMag, playerPhys.animTime, false);
+
+            // RIA'S MULTI-BEHAVIOR POETIC AI
+            const dxToRia = riaPhys.x - playerPhys.x;
+            const dzToRia = riaPhys.z - playerPhys.z;
+            const distToRia = Math.hypot(dxToRia, dzToRia);
+
+            if (riaPhys.behaviorTimer > 0) {
+                riaPhys.behaviorTimer -= dt;
+                if (riaPhys.behaviorTimer <= 0) {
+                    riaPhys.behavior = 'ROAM_EVADE';
+                }
+            }
+
+            const moodEl = document.getElementById('hud-ria-mood');
+            const stateIconEl = document.getElementById('ria-state-icon');
+
+            if (riaPhys.behavior === 'DANCE_TWIRL') {
+                // Ria stops and twirls happily to the music or lanterns!
+                riaPhys.vx *= 0.85;
+                riaPhys.vz *= 0.85;
+                riaPhys.yaw += dt * 7.5;
+                ria.face.setState('love', false);
+                ria.leftArm.shoulderPivot.rotation.x = -2.2;
+                ria.rightArm.shoulderPivot.rotation.x = -2.2;
+                moodEl.textContent = 'Mood: Enchanted & Twirling 🎵';
+                stateIconEl.textContent = '🎵';
+            } else if (riaPhys.behavior === 'CURIOUS_APPROACH' && riaPhys.curiousTarget) {
+                // Ria tiptoes closer out of curiosity!
+                const cdx = riaPhys.curiousTarget.x - riaPhys.x;
+                const cdz = riaPhys.curiousTarget.z - riaPhys.z;
+                const cdist = Math.hypot(cdx, cdz);
+                if (cdist > 3.5) {
+                    riaPhys.vx = (cdx / cdist) * (riaPhys.speed * 0.65);
+                    riaPhys.vz = (cdz / cdist) * (riaPhys.speed * 0.65);
+                    riaPhys.x += riaPhys.vx * dt;
+                    riaPhys.z += riaPhys.vz * dt;
+                    riaPhys.yaw = Math.atan2(riaPhys.vx, riaPhys.vz);
+                } else {
+                    riaPhys.vx = 0; riaPhys.vz = 0;
+                    riaPhys.yaw = Math.atan2(playerPhys.x - riaPhys.x, playerPhys.z - riaPhys.z);
+                }
+                ria.face.setState('surprised', false);
+                moodEl.textContent = 'Mood: Curious 👀✨';
+                stateIconEl.textContent = '❓';
+                const rSpd = Math.hypot(riaPhys.vx, riaPhys.vz);
+                riaPhys.animTime += dt * (rSpd * 1.4 + 2);
+                animateRunCycle(ria, rSpd, riaPhys.animTime, true);
+            } else if (riaPhys.behavior === 'WAIT_WINK' || distToRia > 24.0) {
+                // Ria stops, looks back over her shoulder, waves, and winks with her tongue out!
+                riaPhys.vx *= 0.86;
+                riaPhys.vz *= 0.86;
+                const facePlayerYaw = Math.atan2(-dxToRia, -dzToRia);
+                riaPhys.yaw = facePlayerYaw;
+                riaPhys.animTime += dt * 5;
+
+                ria.face.setState('wink_tongue', false);
+                ria.rightArm.shoulderPivot.rotation.x = -2.35;
+                ria.rightArm.shoulderPivot.rotation.z = -0.35 + Math.sin(elapsed * 9) * 0.35;
+                ria.rightArm.elbowPivot.rotation.x = -0.4;
+                ria.leftArm.shoulderPivot.rotation.set(0, 0, 0.2);
+                ria.leftLeg.hipPivot.rotation.x = 0;
+                ria.rightLeg.hipPivot.rotation.x = 0;
+                moodEl.textContent = 'Mood: Waiting & Winking 😜';
+                stateIconEl.textContent = '😜';
+            } else {
+                // Playful Evasion Steering across the Open World
+                ria.face.setState('tease', false);
+                moodEl.textContent = 'Mood: Playful Breeze 🌸';
+                stateIconEl.textContent = '✨';
+
+                const fleeX = dxToRia / (distToRia + 0.001);
+                const fleeZ = dzToRia / (distToRia + 0.001);
+
+                const tangentX = -riaPhys.z / (Math.hypot(riaPhys.x, riaPhys.z) + 1);
+                const tangentZ = riaPhys.x / (Math.hypot(riaPhys.x, riaPhys.z) + 1);
+
+                const distCenter = Math.hypot(riaPhys.x, riaPhys.z);
+                const centerPull = distCenter > (WORLD_RADIUS * 0.55) ? 0.85 : 0.12;
+                const pullX = (-riaPhys.x / (distCenter + 1)) * centerPull;
+                const pullZ = (-riaPhys.z / (distCenter + 1)) * centerPull;
+
+                let avoidX = 0, avoidZ = 0;
+                for (const ob of obstacles) {
+                    const odx = riaPhys.x - ob.x;
+                    const odz = riaPhys.z - ob.z;
+                    const odist = Math.hypot(odx, odz);
+                    if (odist < ob.r + 3.6) {
+                        const push = (ob.r + 3.6 - odist) * 2.2;
+                        avoidX += (odx / (odist + 0.01)) * push;
+                        avoidZ += (odz / (odist + 0.01)) * push;
+                    }
+                }
+
+                let steerX = fleeX * 1.25 + tangentX * 0.65 + pullX + avoidX;
+                let steerZ = fleeZ * 1.25 + tangentZ * 0.65 + pullZ + avoidZ;
+                const steerLen = Math.hypot(steerX, steerZ) || 1;
+                steerX /= steerLen;
+                steerZ /= steerLen;
+
+                riaPhys.vx += (steerX * riaPhys.speed - riaPhys.vx) * Math.min(1, dt * 7);
+                riaPhys.vz += (steerZ * riaPhys.speed - riaPhys.vz) * Math.min(1, dt * 7);
+
+                riaPhys.x += riaPhys.vx * dt;
+                riaPhys.z += riaPhys.vz * dt;
+                resolveObstacleCollisions(riaPhys);
+
+                const riaSpd = Math.hypot(riaPhys.vx, riaPhys.vz);
+                if (riaSpd > 0.2) {
+                    const rTargetYaw = Math.atan2(riaPhys.vx, riaPhys.vz);
+                    let rDiff = rTargetYaw - riaPhys.yaw;
+                    while (rDiff > Math.PI) rDiff -= Math.PI * 2;
+                    while (rDiff < -Math.PI) rDiff += Math.PI * 2;
+                    riaPhys.yaw += rDiff * Math.min(1, dt * 10);
+                    riaPhys.animTime += dt * riaSpd * 1.55;
+                }
+                animateRunCycle(ria, riaSpd, riaPhys.animTime, true);
+            }
+
+            riaPhys.y = getTerrainHeight(riaPhys.x, riaPhys.z);
+
+            // Periodic Teasing Speech Bubble
+            riaPhys.teaseTimer -= dt;
+            if (riaPhys.teaseTimer <= 0) {
+                triggerRiaTease();
+                riaPhys.teaseTimer = 4.6 + Math.random() * 2.5;
+            }
+
+            // Collectible Floating Love Petals
+            for (const h of loveHearts) {
+                const hd = Math.hypot(playerPhys.x - h.group.position.x, playerPhys.z - h.group.position.z);
+                if (hd < 2.2) {
+                    heartsCollected++;
+                    catchProgress = Math.min(100, catchProgress + 9);
+                    playerPhys.stamina = Math.min(100, playerPhys.stamina + 35);
+                    riaPhys.speed = Math.max(8.0, riaPhys.speed - 0.14);
+
+                    audio.playHeartPickup();
+                    emitHeartBurst(h.group.position.x, h.group.position.y + 1.2, h.group.position.z, 12);
+                    placeHeartRandomly(h.group);
+
+                    document.getElementById('hud-hearts').textContent = heartsCollected;
+                }
+            }
+
+            // Proximity Romance Meter Gain & Direct Catch Check
+            if (distToRia < 7.0) {
+                catchProgress = Math.min(100, catchProgress + dt * 16);
+                priyanshu.face.setState('blush', false);
+            } else {
+                priyanshu.face.setState('happy', false);
+            }
+
+            if (distToRia < 2.35 || catchProgress >= 100) {
+                catchProgress = 100;
+                startProposalCutscene();
+            }
+
+            checkBiomeAndActivities();
+
+            // Update HUD
+            document.getElementById('hud-distance').textContent = `${distToRia.toFixed(1)}m`;
+            document.getElementById('hud-catch-bar').style.width = `${Math.min(100, catchProgress)}%`;
+            document.getElementById('hud-stamina-text').textContent = `${Math.round(playerPhys.stamina)}%`;
+            document.getElementById('hud-stamina-bar').style.width = `${playerPhys.stamina}%`;
+
+            updateCharacterTransforms();
+        }
+
+        function animateRunCycle(charObj, speed, animTime, isRia) {
+            const normSpeed = Math.min(1, speed / 12);
+            const swing = Math.sin(animTime) * 0.85 * normSpeed;
+            const bounce = Math.abs(Math.cos(animTime)) * 0.12 * normSpeed;
+
+            charObj.bodyPivot.position.y = bounce;
+            charObj.bodyPivot.rotation.x = 0.13 * normSpeed;
+
+            // Arms swing opposite to legs with natural elbow bend
+            charObj.leftArm.shoulderPivot.rotation.x = swing * 0.85;
+            charObj.leftArm.shoulderPivot.rotation.z = 0.10;
+            charObj.leftArm.elbowPivot.rotation.x = -0.35 * normSpeed - Math.max(0, -swing * 0.45);
+
+            charObj.rightArm.shoulderPivot.rotation.x = -swing * 0.85;
+            charObj.rightArm.shoulderPivot.rotation.z = -0.10;
+            charObj.rightArm.elbowPivot.rotation.x = -0.35 * normSpeed - Math.max(0, swing * 0.45);
+
+            // Multi-joint Thigh & Knee Run Articulation
+            charObj.leftLeg.hipPivot.rotation.x = -swing;
+            charObj.leftLeg.kneePivot.rotation.x = Math.max(0, swing * 1.18);
+
+            charObj.rightLeg.hipPivot.rotation.x = swing;
+            charObj.rightLeg.kneePivot.rotation.x = Math.max(0, -swing * 1.18);
+
+            // Secondary Hair, Scarf, Coattail & Ribbon Physics!
+            if (isRia) {
+                charObj.ponytailPivot.rotation.x = 0.28 * normSpeed + Math.sin(animTime * 2) * 0.18 * normSpeed;
+                charObj.ponytailPivot.rotation.z = Math.cos(animTime) * 0.15 * normSpeed;
+                charObj.skirtPivot.rotation.z = Math.sin(animTime) * 0.07 * normSpeed;
+                charObj.ribbonPivot.rotation.x = 0.35 * normSpeed + Math.abs(Math.sin(animTime * 1.5)) * 0.25 * normSpeed;
+            } else {
+                charObj.hairGroup.rotation.z = Math.sin(animTime) * 0.04 * normSpeed;
+                charObj.coattailPivot.rotation.x = 0.32 * normSpeed + Math.abs(Math.sin(animTime)) * 0.22 * normSpeed;
+                charObj.scarfTailPivot.rotation.x = 0.45 * normSpeed + Math.sin(animTime * 2) * 0.25 * normSpeed;
+            }
+        }
+
         function updateCharacterTransforms() {
             priyanshu.mesh.position.set(playerPhys.x, playerPhys.y, playerPhys.z);
             priyanshu.mesh.rotation.y = playerPhys.yaw;
@@ -3700,76 +4480,179 @@
             ria.mesh.rotation.y = riaPhys.yaw;
         }
 
-        function update2DLabels() {
-            const updateSingleLabel = (worldPos, elementId, yOffset) => {
-                const el = document.getElementById(elementId);
-                const pos = worldPos.clone();
-                pos.y += yOffset;
-                pos.project(camera);
+        /***********************************************************************
+         * 13. CAMERA CONTROLLER, 2D LABELS & MAIN ANIMATION LOOP
+         ***********************************************************************/
+        function updateCamera(dt) {
+            if (currentState === GAME_STATE.CHASE || currentState === GAME_STATE.INTRO) {
+                const camDist = 11.2;
+                const camHeight = 5.4;
+                const targetCamX = playerPhys.x + Math.sin(cameraAzimuth) * camDist;
+                const targetCamZ = playerPhys.z + Math.cos(cameraAzimuth) * camDist;
 
-                if (pos.z > 1) {
-                    el.style.opacity = '0';
-                    return;
+                camera.position.x += (targetCamX - camera.position.x) * Math.min(1, dt * 8);
+                camera.position.z += (targetCamZ - camera.position.z) * Math.min(1, dt * 8);
+                camera.position.y += ((playerPhys.y + camHeight) - camera.position.y) * Math.min(1, dt * 8);
+
+                const lookX = playerPhys.x * 0.72 + riaPhys.x * 0.28;
+                const lookZ = playerPhys.z * 0.72 + riaPhys.z * 0.28;
+                camera.lookAt(lookX, playerPhys.y + 2.0, lookZ);
+            } else if (currentState === GAME_STATE.COUPLE_MODE) {
+                const midX = (playerPhys.x + riaPhys.x) * 0.5;
+                const midY = (playerPhys.y + riaPhys.y) * 0.5;
+                const midZ = (playerPhys.z + riaPhys.z) * 0.5;
+
+                if (coupleState.subMode === 'BENCH' || coupleState.subMode === 'PICNIC') {
+                    // Front-facing romantic camera framing both seated characters clearly above the bottom dock
+                    const faceYaw = playerPhys.yaw + cameraAzimuth;
+                    const dist = 5.2;
+                    const tx = midX + Math.sin(faceYaw) * dist;
+                    const tz = midZ + Math.cos(faceYaw) * dist;
+                    camera.position.x += (tx - camera.position.x) * Math.min(1, dt * 6);
+                    camera.position.z += (tz - camera.position.z) * Math.min(1, dt * 6);
+                    camera.position.y += ((midY + 2.15) - camera.position.y) * Math.min(1, dt * 6);
+                    camera.lookAt(midX, midY + 1.55, midZ);
+                } else if (coupleState.subMode === 'SWING') {
+                    // Side-angle camera showing Priyanshu pushing Ria & her full pendulum arc
+                    const sw = COUPLE_ACTIVITIES[1];
+                    const sy = getTerrainHeight(sw.x, sw.z);
+                    const angle = 1.05 + cameraAzimuth;
+                    const dist = 7.4;
+                    camera.position.x += (sw.x + Math.sin(angle) * dist - camera.position.x) * Math.min(1, dt * 6);
+                    camera.position.z += (sw.z + Math.cos(angle) * dist - camera.position.z) * Math.min(1, dt * 6);
+                    camera.position.y += ((sy + 3.2) - camera.position.y) * Math.min(1, dt * 6);
+                    camera.lookAt(sw.x, sy + 2.4, sw.z);
+                } else if (coupleState.subMode === 'BOAT') {
+                    // Scenic river-cruising camera showing both Priyanshu rowing & Ria facing him
+                    const angle = coupleState.boatYaw + 2.45 + cameraAzimuth;
+                    const dist = 7.8;
+                    camera.position.x += (coupleState.boatX + Math.sin(angle) * dist - camera.position.x) * Math.min(1, dt * 6);
+                    camera.position.z += (coupleState.boatZ + Math.cos(angle) * dist - camera.position.z) * Math.min(1, dt * 6);
+                    camera.position.y += (3.6 - camera.position.y) * Math.min(1, dt * 6);
+                    camera.lookAt(coupleState.boatX, 1.35, coupleState.boatZ);
+                } else {
+                    // Hand-in-Hand Roaming Camera
+                    const camDist = 8.8;
+                    const camHeight = 4.2;
+                    const targetCamX = midX + Math.sin(cameraAzimuth) * camDist;
+                    const targetCamZ = midZ + Math.cos(cameraAzimuth) * camDist;
+                    camera.position.x += (targetCamX - camera.position.x) * Math.min(1, dt * 8);
+                    camera.position.z += (targetCamZ - camera.position.z) * Math.min(1, dt * 8);
+                    camera.position.y += ((midY + camHeight) - camera.position.y) * Math.min(1, dt * 8);
+                    camera.lookAt(midX, midY + 1.85, midZ);
                 }
-                const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
-                const y = (-(pos.y * 0.5) + 0.5) * window.innerHeight;
-                el.style.opacity = '1';
-                el.style.left = `${x}px`;
-                el.style.top = `${y}px`;
-            };
+            } else {
+                // Smooth Front-Hemisphere Camera during Proposal Cutscene so neither character blocks the other!
+                cutsceneCameraAngle += dt * 0.22;
+                const midX = (playerPhys.x + riaPhys.x) * 0.5;
+                const midZ = (playerPhys.z + riaPhys.z) * 0.5;
+                const groundY = playerPhys.y;
 
-            updateSingleLabel(priyanshu.mesh.position, 'label-priyanshu', 3.45);
-            updateSingleLabel(ria.mesh.position, 'label-ria', 3.35);
+                // Oscillate gently in front of the pair (-0.55 to +0.55 rad) so both faces are always visible
+                const orbitYaw = Math.sin(cutsceneCameraAngle) * 0.52 + cameraAzimuth;
+                let radius = 4.8;
+                let height = groundY + 2.35;
+                let lookX = midX;
+                let lookY = groundY + 1.45;
+                let lookZ = midZ;
+
+                if (cutsceneFocusMode === 'PRIYANSHU_KNEEL') {
+                    radius = 4.1;
+                    height = groundY + 2.05;
+                    lookX = playerPhys.x * 0.55 + riaPhys.x * 0.45;
+                    lookY = groundY + 1.35;
+                } else if (cutsceneFocusMode === 'RIA_BLUSH') {
+                    radius = 4.1;
+                    height = groundY + 2.25;
+                    lookX = riaPhys.x * 0.6 + playerPhys.x * 0.4;
+                    lookY = groundY + 1.65;
+                }
+
+                const camX = midX + Math.sin(orbitYaw) * radius;
+                const camZ = midZ + Math.cos(orbitYaw) * radius;
+                camera.position.lerp(new THREE.Vector3(camX, height, camZ), Math.min(1, dt * 5));
+                camera.lookAt(lookX, lookY, lookZ);
+            }
         }
 
-        let lastTime = performance.now();
+        function projectToScreen(worldVec, el, clampSafeZone = false) {
+            const v = worldVec.clone().project(camera);
+            if (v.z > 1) {
+                el.style.opacity = '0';
+                return;
+            }
+            let x = (v.x * 0.5 + 0.5) * window.innerWidth;
+            let y = (-(v.y * 0.5) + 0.5) * window.innerHeight;
 
-        function gameLoop(now) {
-            requestAnimationFrame(gameLoop);
-
-            const dt = Math.min((now - lastTime) / 1000, 0.05);
-            lastTime = now;
-            const elapsed = now * 0.001;
-
-            if (callCooldown > 0) callCooldown = Math.max(0, callCooldown - dt);
-
-            // Automatic Anime Eye Blinking Cycle
-            blinkTimer += dt;
-            const isBlinkingNow = (blinkTimer % 3.6) > 3.44;
-            priyanshu.face.setState(priyanshu.face.expression, isBlinkingNow);
-            ria.face.setState(ria.face.expression, isBlinkingNow);
-
-            // Rotate Sparkling Diamond & Windmill Blades
-            priyanshu.diamond.rotation.y += dt * 3.8;
-            if (animatedProps.windmillBlades) {
-                animatedProps.windmillBlades.rotation.z += dt * 0.75;
+            if (clampSafeZone) {
+                // Keep labels & speech bubbles inside the clear middle viewport so they never get covered by the top HUD or bottom dock
+                const minX = Math.min(140, window.innerWidth * 0.22);
+                const maxX = window.innerWidth - minX;
+                const minY = Math.max(82, window.innerHeight * 0.18);
+                const maxY = window.innerHeight - Math.max(95, window.innerHeight * 0.22);
+                x = Math.max(minX, Math.min(maxX, x));
+                y = Math.max(minY, Math.min(maxY, y));
             }
 
-            // Sway Sunflowers & Floating River Lotus Lanterns
-            animatedProps.sunflowers.forEach((sf) => {
-                sf.group.rotation.z = Math.sin(elapsed * 2.0 + sf.phase) * 0.08;
-            });
-            animatedProps.lotusLanterns.forEach((lt) => {
-                lt.group.position.z = lt.baseZ + Math.sin(elapsed * 0.8 + lt.phase) * 1.2;
-            });
+            el.style.opacity = '1';
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+        }
 
-            // Rising Sky Lanterns
+        function update2DLabels() {
+            const pHeadOffset = (currentState === GAME_STATE.CUTSCENE && currentDialogueIdx >= 1) ? 2.55 : 3.32;
+            const pPos = new THREE.Vector3(playerPhys.x, playerPhys.y + pHeadOffset, playerPhys.z);
+            const rPos = new THREE.Vector3(riaPhys.x, riaPhys.y + 3.25, riaPhys.z);
+
+            projectToScreen(pPos, document.getElementById('label-priyanshu'), true);
+            projectToScreen(rPos, document.getElementById('label-ria'), true);
+        }
+
+        function updateWorldParticlesAndProps(dt, elapsed) {
+            // 1. Automatic Anime Eye Blinking
+            blinkTimer -= dt;
+            if (blinkTimer <= 0) {
+                priyanshu.face.setState(priyanshu.face.expression, true);
+                ria.face.setState(ria.face.expression, true);
+                setTimeout(() => {
+                    priyanshu.face.setState(priyanshu.face.expression, false);
+                    ria.face.setState(ria.face.expression, false);
+                }, 140);
+                blinkTimer = 2.8 + Math.random() * 2.4;
+            }
+
+            // 2. Rotating Windmill on Golden Sunflower Hill
+            if (animatedProps.windmillBlades) {
+                animatedProps.windmillBlades.rotation.z += dt * 0.65;
+            }
+
+            // 3. Swaying Sunflowers
+            for (const sf of animatedProps.sunflowers) {
+                sf.group.rotation.z = Math.sin(elapsed * 1.8 + sf.phase) * 0.08;
+            }
+
+            // 4. Drifting Lotus River Lanterns
+            for (const ll of animatedProps.lotusLanterns) {
+                ll.group.position.z = ll.baseZ + Math.sin(elapsed * 0.8 + ll.phase) * 1.8;
+            }
+
+            // 5. Rising Sky Lanterns
             for (let i = animatedProps.skyLanterns.length - 1; i >= 0; i--) {
                 const sl = animatedProps.skyLanterns[i];
                 sl.mesh.position.y += sl.vy * dt;
                 sl.mesh.position.x += sl.vx * dt;
                 sl.mesh.position.z += sl.vz * dt;
                 sl.mesh.rotation.y += dt * 0.8;
-                if (sl.mesh.position.y > 95) {
+                if (sl.mesh.position.y > 75) {
                     scene.remove(sl.mesh);
                     animatedProps.skyLanterns.splice(i, 1);
                 }
             }
 
-            // Expanding Shrine Bell Musical Waves
+            // 6. Expanding Shrine Bell Wave Rings
             for (let i = animatedProps.bellWaveRings.length - 1; i >= 0; i--) {
                 const bw = animatedProps.bellWaveRings[i];
-                bw.scale += dt * 16;
+                bw.scale += dt * 8.5;
                 bw.alpha -= dt * 0.45;
                 bw.mesh.scale.set(bw.scale, bw.scale, 1);
                 bw.mesh.material.opacity = Math.max(0, bw.alpha);
@@ -3779,22 +4662,46 @@
                 }
             }
 
-            // Falling Sakura Petals (Follows around player's region)
+            // 7. Pulsing Activity Beacons
+            for (const act of ACTIVITIES) {
+                if (act.glowRing && !act.completed) {
+                    const s = 1 + Math.sin(elapsed * 3.5) * 0.08;
+                    act.glowRing.scale.set(s, s, 1);
+                }
+            }
+
+            // 8. Floating Collectible Hearts
+            for (const h of loveHearts) {
+                h.mesh.rotation.y = elapsed * 2.2 + h.phase;
+                h.mesh.position.y = 1.1 + Math.sin(elapsed * 3 + h.phase) * 0.22;
+            }
+
+            if (priyanshu.diamond) {
+                priyanshu.diamond.rotation.y = elapsed * 3.5;
+            }
+
+            // 9. Falling Cherry Blossom Petals (Centered around Priyanshu so the whole open world has petals!)
             const posAttr = petalGeo.attributes.position;
             for (let i = 0; i < PETAL_COUNT; i++) {
-                let px = posAttr.getX(i) + petalSpeeds[i].vx * dt;
-                let py = posAttr.getY(i) - petalSpeeds[i].vy * dt;
-                let pz = posAttr.getZ(i) + petalSpeeds[i].vz * dt;
-                if (py < 0) {
-                    py = 26;
-                    px = playerPhys.x + (Math.random() - 0.5) * 160;
-                    pz = playerPhys.z + (Math.random() - 0.5) * 160;
+                let px = posAttr.getX(i);
+                let py = posAttr.getY(i);
+                let pz = posAttr.getZ(i);
+                const spd = petalSpeeds[i];
+
+                py -= spd.vy * dt;
+                px += (spd.vx + Math.sin(elapsed + i) * 0.45) * dt;
+                pz += (spd.vz + Math.cos(elapsed + i) * 0.45) * dt;
+
+                if (py < 0.2) {
+                    py = 24 + Math.random() * 8;
+                    px = playerPhys.x + (Math.random() - 0.5) * 110;
+                    pz = playerPhys.z + (Math.random() - 0.5) * 110;
                 }
                 posAttr.setXYZ(i, px, py, pz);
             }
             posAttr.needsUpdate = true;
 
-            // 3D Heart Burst Particles
+            // 10. Heart Fireworks Burst Particles
             for (let i = burstHearts.length - 1; i >= 0; i--) {
                 const b = burstHearts[i];
                 b.life -= dt;
@@ -3803,813 +4710,44 @@
                     burstHearts.splice(i, 1);
                     continue;
                 }
+                b.vy -= 9.2 * dt;
                 b.mesh.position.x += b.vx * dt;
                 b.mesh.position.y += b.vy * dt;
                 b.mesh.position.z += b.vz * dt;
-                b.vy -= 4.5 * dt;
-                b.mesh.rotation.y += 4 * dt;
+                b.mesh.rotation.y += dt * 4;
                 const s = Math.max(0.01, b.life * 0.35);
                 b.mesh.scale.set(s, s, s);
             }
+        }
 
-            // Collectible Love Hearts
-            loveHearts.forEach((h) => {
-                h.phase += dt * 3;
-                h.mesh.rotation.y += dt * 2.2;
-                h.mesh.position.y = 1.05 + Math.sin(h.phase) * 0.22;
-            });
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.05);
+            const elapsed = clock.getElapsedTime();
 
             if (currentState === GAME_STATE.CHASE) {
-                updateChaseGameplay(dt, elapsed);
+                updateChasePhysics(dt, elapsed);
                 renderMiniMap();
             } else if (currentState === GAME_STATE.COUPLE_MODE) {
-                updateCoupleModeGameplay(dt, elapsed);
+                updateCoupleModePhysics(dt, elapsed);
                 renderMiniMap();
-            } else if (currentState === GAME_STATE.CUTSCENE || currentState === GAME_STATE.CELEBRATION) {
-                updateCutsceneCamera(dt, elapsed);
-            } else if (currentState === GAME_STATE.INTRO) {
-                cutsceneCameraAngle += dt * 0.22;
-                camera.position.set(
-                    Math.sin(cutsceneCameraAngle) * 22,
-                    8.2,
-                    Math.cos(cutsceneCameraAngle) * 22
-                );
-                camera.lookAt(0, 2.2, 0);
+            } else if (currentState === GAME_STATE.CELEBRATION) {
+                priyanshu.bodyPivot.position.y = Math.abs(Math.sin(elapsed * 5.5)) * 0.28;
+                ria.bodyPivot.position.y = Math.abs(Math.cos(elapsed * 5.5)) * 0.28;
+                if (Math.random() < 0.14) {
+                    const midX = (playerPhys.x + riaPhys.x) * 0.5;
+                    const midZ = (playerPhys.z + riaPhys.z) * 0.5;
+                    emitHeartBurst(midX + (Math.random() - 0.5) * 4, playerPhys.y + 2.2, midZ + (Math.random() - 0.5) * 4, 5);
+                }
             }
 
+            updateCamera(dt);
             update2DLabels();
+            updateWorldParticlesAndProps(dt, elapsed);
+
             renderer.render(scene, camera);
-        }
-
-        function updateChaseGameplay(dt, elapsed) {
-            let inputX = 0;
-            let inputZ = 0;
-            if (keys.left) inputX -= 1;
-            if (keys.right) inputX += 1;
-            if (keys.up) inputZ -= 1;
-            if (keys.down) inputZ += 1;
-
-            if (joystickInput.active) {
-                inputX = joystickInput.x;
-                inputZ = joystickInput.y;
-            }
-
-            const inputLen = Math.hypot(inputX, inputZ);
-            if (inputLen > 1) {
-                inputX /= inputLen;
-                inputZ /= inputLen;
-            }
-
-            // Dash & Stamina
-            const isDashing = keys.dash && playerPhys.stamina > 5 && inputLen > 0.1;
-            if (isDashing) {
-                playerPhys.stamina = Math.max(0, playerPhys.stamina - 28 * dt);
-                priyanshu.ringBoxGroup.visible = true;
-                priyanshu.face.setState('blush', priyanshu.face.isBlinking);
-                if (Math.random() < 0.4) {
-                    emitHeartBurst(playerPhys.x, playerPhys.y + 1.0, playerPhys.z, 1);
-                }
-                if (playerPhys.stamina <= 6) {
-                    showCharacterEmote('priyanshu', '💧');
-                }
-            } else {
-                playerPhys.stamina = Math.min(100, playerPhys.stamina + 25 * dt);
-                priyanshu.ringBoxGroup.visible = false;
-                priyanshu.face.setState('happy', priyanshu.face.isBlinking);
-            }
-
-            // Extra petal trail if Priyanshu gathered the Sunflower Bouquet
-            if (playerPhys.hasBouquet && inputLen > 0.2 && Math.random() < 0.22) {
-                emitHeartBurst(playerPhys.x, playerPhys.y + 0.6, playerPhys.z, 1);
-            }
-
-            const targetSpeed = isDashing ? playerPhys.dashSpeed : playerPhys.baseSpeed;
-            const sinCam = Math.sin(cameraAzimuth);
-            const cosCam = Math.cos(cameraAzimuth);
-            const moveX = inputX * cosCam + inputZ * sinCam;
-            const moveZ = -inputX * sinCam + inputZ * cosCam;
-
-            const accel = 11.5;
-            playerPhys.vx += (moveX * targetSpeed - playerPhys.vx) * Math.min(1, accel * dt);
-            playerPhys.vz += (moveZ * targetSpeed - playerPhys.vz) * Math.min(1, accel * dt);
-
-            playerPhys.x += playerPhys.vx * dt;
-            playerPhys.z += playerPhys.vz * dt;
-            resolveObstacleCollisions(playerPhys);
-
-            // Terrain Elevation & Vertical Jump Physics
-            const groundH = getTerrainHeight(playerPhys.x, playerPhys.z);
-            playerPhys.y += playerPhys.vy * dt;
-            if (!playerPhys.onGround) {
-                playerPhys.vy -= 21.0 * dt;
-                if (playerPhys.y <= groundH) {
-                    playerPhys.y = groundH;
-                    playerPhys.vy = 0;
-                    playerPhys.onGround = true;
-                }
-            } else {
-                playerPhys.y = groundH;
-            }
-
-            // Priyanshu Articulated Run & Secondary Cloth/Hair Physics
-            const horizSpeed = Math.hypot(playerPhys.vx, playerPhys.vz);
-            if (horizSpeed > 0.35) {
-                const targetYaw = Math.atan2(playerPhys.vx, playerPhys.vz);
-                let diff = targetYaw - playerPhys.yaw;
-                while (diff < -Math.PI) diff += Math.PI * 2;
-                while (diff > Math.PI) diff -= Math.PI * 2;
-                playerPhys.yaw += diff * Math.min(1, 12 * dt);
-
-                playerPhys.animTime += horizSpeed * dt * 1.45;
-                const phase = playerPhys.animTime;
-                const legSwing = Math.sin(phase) * 0.85;
-
-                priyanshu.bodyPivot.rotation.x = isDashing ? 0.24 : 0.12;
-                priyanshu.bodyPivot.rotation.z = -diff * 0.18;
-                priyanshu.bodyPivot.position.y = Math.abs(Math.cos(phase)) * 0.09;
-                priyanshu.hairGroup.rotation.x = -0.06 + Math.sin(phase * 2) * 0.05;
-
-                // Secondary Cloth Physics: Coattail & Red Scarf flutter backward with speed
-                priyanshu.coattailPivot.rotation.x = 0.25 + (horizSpeed / 18) * 0.45 + Math.sin(phase * 2) * 0.12;
-                priyanshu.scarfTailPivot.rotation.x = 0.35 + (horizSpeed / 18) * 0.65 + Math.cos(phase * 2) * 0.18;
-
-                priyanshu.leftLeg.hipPivot.rotation.x = legSwing;
-                priyanshu.leftLeg.kneePivot.rotation.x = Math.max(0, -legSwing * 1.25 + 0.25);
-                priyanshu.rightLeg.hipPivot.rotation.x = -legSwing;
-                priyanshu.rightLeg.kneePivot.rotation.x = Math.max(0, legSwing * 1.25 + 0.25);
-
-                priyanshu.leftArm.shoulderPivot.rotation.x = playerPhys.hasBouquet ? -0.65 : -legSwing * 0.85;
-                priyanshu.leftArm.elbowPivot.rotation.x = -0.65 - Math.max(0, -legSwing * 0.4);
-                priyanshu.rightArm.shoulderPivot.rotation.x = isDashing ? -1.05 : legSwing * 0.85;
-                priyanshu.rightArm.elbowPivot.rotation.x = isDashing ? -0.45 : (-0.65 - Math.max(0, legSwing * 0.4));
-            } else {
-                priyanshu.bodyPivot.rotation.x *= 0.85;
-                priyanshu.bodyPivot.rotation.z *= 0.85;
-                priyanshu.bodyPivot.position.y = Math.sin(elapsed * 3) * 0.03;
-                priyanshu.coattailPivot.rotation.x = 0.06 + Math.sin(elapsed * 2) * 0.04;
-                priyanshu.scarfTailPivot.rotation.x = 0.08 + Math.cos(elapsed * 2.2) * 0.05;
-                priyanshu.leftLeg.hipPivot.rotation.x *= 0.82;
-                priyanshu.leftLeg.kneePivot.rotation.x *= 0.82;
-                priyanshu.rightLeg.hipPivot.rotation.x *= 0.82;
-                priyanshu.rightLeg.kneePivot.rotation.x *= 0.82;
-                priyanshu.leftArm.shoulderPivot.rotation.x *= 0.82;
-                priyanshu.leftArm.elbowPivot.rotation.x *= 0.82;
-                priyanshu.rightArm.shoulderPivot.rotation.x *= 0.82;
-                priyanshu.rightArm.elbowPivot.rotation.x *= 0.82;
-            }
-
-            // Detect Current Biome & Show Poetic Haiku Whisper on Entry
-            for (const b of BIOMES) {
-                if (Math.hypot(playerPhys.x - b.x, playerPhys.z - b.z) < b.radius) {
-                    if (currentBiomeId !== b.id) {
-                        currentBiomeId = b.id;
-                        document.getElementById('hud-biome-name').textContent = b.shortName;
-                        showPoeticWhisper(`🌸 ${b.name}`, b.verse);
-                    }
-                    break;
-                }
-            }
-
-            // Check Proximity to the 5 Interactive Romantic Activities
-            activeNearbyActivity = null;
-            for (const act of ACTIVITIES) {
-                if (act.completed) continue;
-                const dAct = Math.hypot(playerPhys.x - act.x, playerPhys.z - act.z);
-                if (dAct < act.radius) {
-                    activeNearbyActivity = act;
-                    break;
-                }
-            }
-
-            const promptEl = document.getElementById('activity-prompt');
-            if (activeNearbyActivity) {
-                promptEl.classList.remove('hidden');
-                document.getElementById('activity-prompt-icon').textContent = activeNearbyActivity.icon;
-                document.getElementById('activity-prompt-title').textContent = activeNearbyActivity.title;
-                document.getElementById('activity-prompt-sub').textContent = activeNearbyActivity.prompt;
-            } else {
-                promptEl.classList.add('hidden');
-            }
-
-            // Collect Love Hearts
-            loveHearts.forEach((h) => {
-                const distToHeart = Math.hypot(playerPhys.x - h.group.position.x, playerPhys.z - h.group.position.z);
-                if (distToHeart < 1.8) {
-                    heartsCollected++;
-                    document.getElementById('hud-hearts').textContent = heartsCollected;
-                    playerPhys.stamina = Math.min(100, playerPhys.stamina + 35);
-                    catchProgress = Math.min(100, catchProgress + 7);
-
-                    audio.playHeartPickup();
-                    emitHeartBurst(h.group.position.x, h.group.position.y + 1.3, h.group.position.z, 8);
-                    placeHeartRandomly(h.group);
-
-                    if (heartsCollected % 3 === 0) {
-                        triggerRiaTease("Gathering blossom petals along the way? You're full of surprises, Priyanshu! 🌹😉", '✨');
-                    }
-                }
-            });
-
-            // Ria Open-World Behavior State Machine
-            const dxPR = riaPhys.x - playerPhys.x;
-            const dzPR = riaPhys.z - playerPhys.z;
-            const distBetween = Math.hypot(dxPR, dzPR);
-
-            riaPhys.teaseTimer -= dt;
-            if (riaPhys.teaseTimer <= 0) {
-                triggerRiaTease();
-                riaPhys.teaseTimer = 5.0 + Math.random() * 2.5;
-            }
-
-            if (riaPhys.behaviorTimer > 0) {
-                riaPhys.behaviorTimer -= dt;
-                if (riaPhys.behaviorTimer <= 0) {
-                    riaPhys.behavior = 'ROAM_EVADE';
-                }
-            }
-
-            let desiredVx = 0;
-            let desiredVz = 0;
-
-            if (riaPhys.behavior === 'DANCE_TWIRL') {
-                // Ria twirls happily in place to the music / lanterns!
-                document.getElementById('hud-ria-mood').textContent = 'Mood: Enchanted 🎵';
-                document.getElementById('ria-state-icon').textContent = '🎵';
-                ria.face.setState('love', ria.face.isBlinking);
-                riaPhys.yaw += dt * 5.2;
-                ria.leftArm.shoulderPivot.rotation.x = -2.1;
-                ria.rightArm.shoulderPivot.rotation.x = -2.1;
-                ria.skirtPivot.rotation.z = Math.sin(elapsed * 8) * 0.14;
-                ria.ribbonPivot.rotation.x = 0.45;
-            } else if (riaPhys.behavior === 'CURIOUS_APPROACH' && riaPhys.curiousTarget) {
-                // Ria walks curiously toward the Wishing Fountain or Priyanshu's Bouquet
-                document.getElementById('hud-ria-mood').textContent = 'Mood: Curious 👀';
-                document.getElementById('ria-state-icon').textContent = '❓';
-                ria.face.setState('surprised', ria.face.isBlinking);
-                const tx = riaPhys.curiousTarget.x - riaPhys.x;
-                const tz = riaPhys.curiousTarget.z - riaPhys.z;
-                const tDist = Math.hypot(tx, tz);
-                if (tDist > 3.5) {
-                    desiredVx = (tx / tDist) * (riaPhys.speed * 0.72);
-                    desiredVz = (tz / tDist) * (riaPhys.speed * 0.72);
-                }
-            } else if (riaPhys.behavior === 'WAIT_WINK' || distBetween > 26.0) {
-                // Ria pauses, turns toward Priyanshu, winks with tongue out, and waves!
-                document.getElementById('hud-ria-mood').textContent = 'Mood: Teasing 😜';
-                document.getElementById('ria-state-icon').textContent = '😜';
-                ria.face.setState('wink_tongue', ria.face.isBlinking);
-
-                const facePlayerYaw = Math.atan2(-dxPR, -dzPR);
-                let diff = facePlayerYaw - riaPhys.yaw;
-                while (diff < -Math.PI) diff += Math.PI * 2;
-                while (diff > Math.PI) diff -= Math.PI * 2;
-                riaPhys.yaw += diff * Math.min(1, 8 * dt);
-
-                riaPhys.animTime += dt * 7.5;
-                ria.bodyPivot.rotation.x = 0;
-                ria.rightArm.shoulderPivot.rotation.x = -2.2;
-                ria.rightArm.elbowPivot.rotation.z = Math.sin(riaPhys.animTime) * 0.45;
-                ria.leftLeg.hipPivot.rotation.x *= 0.85;
-                ria.leftLeg.kneePivot.rotation.x *= 0.85;
-                ria.rightLeg.hipPivot.rotation.x *= 0.85;
-                ria.rightLeg.kneePivot.rotation.x *= 0.85;
-            } else {
-                // Standard Playful Evade & Biome Roaming
-                document.getElementById('hud-ria-mood').textContent = distBetween < 7.0 ? 'Mood: Flustered 😳' : 'Mood: Playful 😜';
-                document.getElementById('ria-state-icon').textContent = distBetween < 7.0 ? '😳' : '✨';
-                ria.rightArm.elbowPivot.rotation.z = 0;
-                ria.face.setState(distBetween < 6.5 ? 'blush' : 'happy', ria.face.isBlinking);
-
-                const fleeX = dxPR / (distBetween || 1);
-                const fleeZ = dzPR / (distBetween || 1);
-                const distCenter = Math.hypot(riaPhys.x, riaPhys.z) || 1;
-                const tangX = -riaPhys.z / distCenter;
-                const tangZ = riaPhys.x / distCenter;
-
-                const boundaryPull = distCenter > WORLD_RADIUS * 0.55 ? -0.95 : 0.0;
-                const pullX = (riaPhys.x / distCenter) * boundaryPull;
-                const pullZ = (riaPhys.z / distCenter) * boundaryPull;
-
-                let avoidX = 0, avoidZ = 0;
-                for (const ob of obstacles) {
-                    const odx = riaPhys.x - ob.x;
-                    const odz = riaPhys.z - ob.z;
-                    const odist = Math.hypot(odx, odz);
-                    const safeR = ob.r + 3.4;
-                    if (odist < safeR && odist > 0.01) {
-                        const strength = (safeR - odist) / safeR;
-                        avoidX += (odx / odist) * strength * 2.4;
-                        avoidZ += (odz / odist) * strength * 2.4;
-                    }
-                }
-
-                let steerX = fleeX * 1.15 + tangX * 0.65 + pullX + avoidX;
-                let steerZ = fleeZ * 1.15 + tangZ * 0.65 + pullZ + avoidZ;
-                const steerLen = Math.hypot(steerX, steerZ) || 1;
-                steerX /= steerLen;
-                steerZ /= steerLen;
-
-                const dynamicRiaSpeed = riaPhys.speed * (catchProgress > 75 ? 0.84 : 0.94);
-                desiredVx = steerX * dynamicRiaSpeed;
-                desiredVz = steerZ * dynamicRiaSpeed;
-            }
-
-            riaPhys.vx += (desiredVx - riaPhys.vx) * Math.min(1, 7 * dt);
-            riaPhys.vz += (desiredVz - riaPhys.vz) * Math.min(1, 7 * dt);
-
-            riaPhys.x += riaPhys.vx * dt;
-            riaPhys.z += riaPhys.vz * dt;
-            resolveObstacleCollisions(riaPhys);
-            riaPhys.y = getTerrainHeight(riaPhys.x, riaPhys.z);
-
-            const riaSpd = Math.hypot(riaPhys.vx, riaPhys.vz);
-            if (riaSpd > 0.35 && riaPhys.behavior !== 'DANCE_TWIRL') {
-                const targetYaw = Math.atan2(riaPhys.vx, riaPhys.vz);
-                let diff = targetYaw - riaPhys.yaw;
-                while (diff < -Math.PI) diff += Math.PI * 2;
-                while (diff > Math.PI) diff -= Math.PI * 2;
-                riaPhys.yaw += diff * Math.min(1, 10 * dt);
-
-                riaPhys.animTime += riaSpd * dt * 1.65;
-                const phase = riaPhys.animTime;
-                const swing = Math.sin(phase) * 0.78;
-
-                ria.bodyPivot.rotation.x = 0.10;
-                ria.bodyPivot.position.y = Math.abs(Math.cos(phase)) * 0.08;
-                ria.skirtPivot.rotation.z = Math.sin(phase) * 0.09;
-                ria.ribbonPivot.rotation.x = 0.25 + (riaSpd / 12) * 0.45 + Math.sin(phase * 2) * 0.15;
-
-                ria.leftLeg.hipPivot.rotation.x = swing;
-                ria.leftLeg.kneePivot.rotation.x = Math.max(0, -swing * 1.2 + 0.2);
-                ria.rightLeg.hipPivot.rotation.x = -swing;
-                ria.rightLeg.kneePivot.rotation.x = Math.max(0, swing * 1.2 + 0.2);
-
-                ria.leftArm.shoulderPivot.rotation.x = -swing * 0.75;
-                ria.leftArm.elbowPivot.rotation.x = -0.55;
-                ria.rightArm.shoulderPivot.rotation.x = swing * 0.75;
-                ria.rightArm.elbowPivot.rotation.x = -0.55;
-
-                ria.ponytailPivot.rotation.x = Math.abs(Math.sin(phase)) * 0.38;
-                ria.ponytailPivot.rotation.z = Math.cos(phase) * 0.24;
-            }
-
-            updateCharacterTransforms();
-
-            // Romance / Closeness Meter Progress
-            if (distBetween < 9.5) {
-                catchProgress = Math.min(100, catchProgress + (10.5 - distBetween) * 3.1 * dt);
-            }
-
-            document.getElementById('hud-distance').textContent = `${distBetween.toFixed(1)}m`;
-            document.getElementById('hud-catch-bar').style.width = `${Math.min(100, catchProgress)}%`;
-            document.getElementById('hud-stamina-bar').style.width = `${playerPhys.stamina}%`;
-            document.getElementById('hud-stamina-text').textContent = `${Math.round(playerPhys.stamina)}%`;
-
-            // Smooth Follow Camera
-            const camDist = 9.6;
-            const camHeight = 4.8;
-            const desiredCamX = playerPhys.x + Math.sin(cameraAzimuth) * camDist;
-            const desiredCamZ = playerPhys.z + Math.cos(cameraAzimuth) * camDist;
-
-            camera.position.x += (desiredCamX - camera.position.x) * Math.min(1, 8 * dt);
-            camera.position.z += (desiredCamZ - camera.position.z) * Math.min(1, 8 * dt);
-            camera.position.y += (playerPhys.y + camHeight - camera.position.y) * Math.min(1, 6 * dt);
-
-            const lookX = playerPhys.x * 0.75 + riaPhys.x * 0.25;
-            const lookZ = playerPhys.z * 0.75 + riaPhys.z * 0.25;
-            camera.lookAt(lookX, playerPhys.y + 1.85, lookZ);
-
-            if (distBetween < 2.35 || catchProgress >= 100) {
-                startProposalCutscene();
-            }
-        }
-
-        /***********************************************************************
-         * 13. POST-PROPOSAL COUPLE MODE PHYSICS & ANIMATION ENGINE
-         *     - Hand-in-Hand Walking with Synchronized Stride & Clasped Arm IK
-         *     - 3D Scenic Bench Sitting & Head-on-Shoulder Pose
-         *     - Real Pendulum Physics Tree Swing (Priyanshu pushing Ria)
-         *     - 2D Hydrodynamic River Rowboat with Dual-Oar Rowing & Wake Waves
-         ***********************************************************************/
-        function updateCoupleModeGameplay(dt, elapsed) {
-            let inputX = 0;
-            let inputZ = 0;
-            if (keys.left) inputX -= 1;
-            if (keys.right) inputX += 1;
-            if (keys.up) inputZ -= 1;
-            if (keys.down) inputZ += 1;
-            if (joystickInput.active) {
-                inputX = joystickInput.x;
-                inputZ = joystickInput.y;
-            }
-            const inputLen = Math.hypot(inputX, inputZ);
-            if (inputLen > 1) {
-                inputX /= inputLen;
-                inputZ /= inputLen;
-            }
-
-            // 1. COUPLE FREE-ROAM & HAND-IN-HAND WALKING
-            if (coupleState.subMode === 'ROAM') {
-                const isDashing = keys.dash && inputLen > 0.1;
-                const moveSpeed = isDashing ? 14.5 : (coupleState.holdingHands ? 9.2 : 12.2);
-
-                const sinCam = Math.sin(cameraAzimuth);
-                const cosCam = Math.cos(cameraAzimuth);
-                const moveX = inputX * cosCam + inputZ * sinCam;
-                const moveZ = -inputX * sinCam + inputZ * cosCam;
-
-                playerPhys.vx += (moveX * moveSpeed - playerPhys.vx) * Math.min(1, 10 * dt);
-                playerPhys.vz += (moveZ * moveSpeed - playerPhys.vz) * Math.min(1, 10 * dt);
-                playerPhys.x += playerPhys.vx * dt;
-                playerPhys.z += playerPhys.vz * dt;
-                resolveObstacleCollisions(playerPhys);
-
-                const groundH = getTerrainHeight(playerPhys.x, playerPhys.z);
-                playerPhys.y += playerPhys.vy * dt;
-                if (!playerPhys.onGround) {
-                    playerPhys.vy -= 21.0 * dt;
-                    if (playerPhys.y <= groundH) {
-                        playerPhys.y = groundH;
-                        playerPhys.vy = 0;
-                        playerPhys.onGround = true;
-                    }
-                } else {
-                    playerPhys.y = groundH;
-                }
-
-                const horizSpeed = Math.hypot(playerPhys.vx, playerPhys.vz);
-                if (horizSpeed > 0.25) {
-                    const targetYaw = Math.atan2(playerPhys.vx, playerPhys.vz);
-                    let diff = targetYaw - playerPhys.yaw;
-                    while (diff < -Math.PI) diff += Math.PI * 2;
-                    while (diff > Math.PI) diff -= Math.PI * 2;
-                    playerPhys.yaw += diff * Math.min(1, 10 * dt);
-                }
-
-                // Right-hand lateral vector perpendicular to Priyanshu's facing yaw
-                const rightVecX = -Math.cos(playerPhys.yaw);
-                const rightVecZ = Math.sin(playerPhys.yaw);
-
-                if (coupleState.holdingHands) {
-                    // Ria walks smoothly right beside Priyanshu's right hand (0.76m offset)
-                    const targetRiaX = playerPhys.x + rightVecX * 0.76;
-                    const targetRiaZ = playerPhys.z + rightVecZ * 0.76;
-                    riaPhys.x += (targetRiaX - riaPhys.x) * Math.min(1, 14 * dt);
-                    riaPhys.z += (targetRiaZ - riaPhys.z) * Math.min(1, 14 * dt);
-                    riaPhys.y = getTerrainHeight(riaPhys.x, riaPhys.z);
-
-                    let yawDiff = playerPhys.yaw - riaPhys.yaw;
-                    while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
-                    while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
-                    riaPhys.yaw += yawDiff * Math.min(1, 12 * dt);
-
-                    // Synchronized Stride & Inner-Arm Hand-Clasp IK
-                    playerPhys.animTime += horizSpeed * dt * 1.45;
-                    const phase = playerPhys.animTime;
-                    const stride = horizSpeed > 0.25 ? Math.sin(phase) * 0.68 : 0;
-                    const claspSwing = horizSpeed > 0.25 ? Math.sin(phase) * 0.22 : Math.sin(elapsed * 2.2) * 0.05;
-
-                    // Priyanshu legs & outer left arm
-                    priyanshu.bodyPivot.position.y = horizSpeed > 0.25 ? Math.abs(Math.cos(phase)) * 0.06 : Math.sin(elapsed * 2.5) * 0.025;
-                    priyanshu.leftLeg.hipPivot.rotation.x = stride;
-                    priyanshu.leftLeg.kneePivot.rotation.x = Math.max(0, -stride * 1.15);
-                    priyanshu.rightLeg.hipPivot.rotation.x = -stride;
-                    priyanshu.rightLeg.kneePivot.rotation.x = Math.max(0, stride * 1.15);
-                    priyanshu.leftArm.shoulderPivot.rotation.set(-stride * 0.65, 0, 0.10);
-                    priyanshu.leftArm.elbowPivot.rotation.set(-0.35, 0, 0);
-
-                    // Priyanshu's Right Arm reaches inward toward Ria's Left Hand
-                    priyanshu.rightArm.shoulderPivot.rotation.set(claspSwing - 0.12, 0, -0.44);
-                    priyanshu.rightArm.elbowPivot.rotation.set(-0.28, 0, 0);
-
-                    // Ria legs & outer right arm synchronized with Priyanshu
-                    ria.bodyPivot.position.y = priyanshu.bodyPivot.position.y;
-                    ria.leftLeg.hipPivot.rotation.x = stride;
-                    ria.leftLeg.kneePivot.rotation.x = Math.max(0, -stride * 1.15);
-                    ria.rightLeg.hipPivot.rotation.x = -stride;
-                    ria.rightLeg.kneePivot.rotation.x = Math.max(0, stride * 1.15);
-                    ria.rightArm.shoulderPivot.rotation.set(stride * 0.65, 0, -0.12);
-                    ria.rightArm.elbowPivot.rotation.set(-0.35, 0, 0);
-
-                    // Ria's Left Arm reaches inward to clasp Priyanshu's Right Hand
-                    ria.leftArm.shoulderPivot.rotation.set(claspSwing - 0.12, 0, 0.46);
-                    ria.leftArm.elbowPivot.rotation.set(-0.28, 0, 0);
-
-                    // Position glowing pink heart right between their clasped hands
-                    const handMidX = (playerPhys.x + riaPhys.x) * 0.5 + Math.sin(playerPhys.yaw) * 0.12;
-                    const handMidZ = (playerPhys.z + riaPhys.z) * 0.5 + Math.cos(playerPhys.yaw) * 0.12;
-                    const handMidY = (playerPhys.y + riaPhys.y) * 0.5 + 1.28 + Math.sin(elapsed * 4) * 0.04;
-                    animatedProps.handHoldHeartMesh.visible = true;
-                    animatedProps.handHoldHeartMesh.position.set(handMidX, handMidY, handMidZ);
-                    animatedProps.handHoldHeartMesh.rotation.y = elapsed * 2.4;
-
-                    // Affectionate glances toward each other while walking
-                    priyanshu.headGroup.rotation.y = -0.22;
-                    ria.headGroup.rotation.y = 0.24;
-
-                    // Periodic sweet couple banter while strolling hand in hand
-                    coupleState.banterTimer -= dt;
-                    if (coupleState.banterTimer <= 0) {
-                        triggerRealisticCoupleBanter('HAND_HOLD');
-                        coupleState.banterTimer = 9.5 + Math.random() * 4.0;
-                    }
-                } else {
-                    // Companion follow when not holding hands
-                    animatedProps.handHoldHeartMesh.visible = false;
-                    priyanshu.headGroup.rotation.y = 0;
-                    ria.headGroup.rotation.y = 0;
-                    const dx = playerPhys.x - riaPhys.x;
-                    const dz = playerPhys.z - riaPhys.z;
-                    const d = Math.hypot(dx, dz);
-                    if (d > 2.4) {
-                        riaPhys.x += (dx / d) * 9.5 * dt;
-                        riaPhys.z += (dz / d) * 9.5 * dt;
-                        riaPhys.yaw = Math.atan2(dx, dz);
-                    }
-                    riaPhys.y = getTerrainHeight(riaPhys.x, riaPhys.z);
-                }
-
-                updateCharacterTransforms();
-
-                // Check Proximity to the 4 Couple Mode Stations (Bench, Swing, Boat, Picnic)
-                activeNearbyActivity = null;
-                for (const cAct of COUPLE_ACTIVITIES) {
-                    const dist = Math.hypot(playerPhys.x - cAct.x, playerPhys.z - cAct.z);
-                    if (dist < cAct.radius) {
-                        activeNearbyActivity = cAct;
-                        break;
-                    }
-                }
-                const promptEl = document.getElementById('activity-prompt');
-                if (activeNearbyActivity) {
-                    promptEl.classList.remove('hidden');
-                    document.getElementById('activity-prompt-icon').textContent = activeNearbyActivity.icon;
-                    document.getElementById('activity-prompt-title').textContent = activeNearbyActivity.title;
-                    document.getElementById('activity-prompt-sub').textContent = activeNearbyActivity.prompt;
-                } else {
-                    promptEl.classList.add('hidden');
-                }
-
-                // Smooth Third-Person Camera Framing Both Priyanshu & Ria Walking Together
-                const midX = (playerPhys.x + riaPhys.x) * 0.5;
-                const midZ = (playerPhys.z + riaPhys.z) * 0.5;
-                const desiredCamX = midX - Math.sin(playerPhys.yaw + cameraAzimuth) * 7.8;
-                const desiredCamZ = midZ - Math.cos(playerPhys.yaw + cameraAzimuth) * 7.8;
-                camera.position.x += (desiredCamX - camera.position.x) * Math.min(1, 7 * dt);
-                camera.position.z += (desiredCamZ - camera.position.z) * Math.min(1, 7 * dt);
-                camera.position.y += (playerPhys.y + 3.8 - camera.position.y) * Math.min(1, 6 * dt);
-                camera.lookAt(midX, playerPhys.y + 1.85, midZ);
-            }
-
-            // 2. 3D SCENIC BENCH SITTING & PICNIC MODE
-            else if (coupleState.subMode === 'BENCH' || coupleState.subMode === 'PICNIC') {
-                const midX = (playerPhys.x + riaPhys.x) * 0.5;
-                const midZ = (playerPhys.z + riaPhys.z) * 0.5;
-                const baseH = getTerrainHeight(midX, midZ);
-
-                // Gentle leg dangle & breathing while seated
-                const dangle = Math.sin(elapsed * 2.4) * 0.12;
-                ria.leftLeg.kneePivot.rotation.x = 1.42 + dangle;
-                ria.rightLeg.kneePivot.rotation.x = 1.42 - dangle;
-                priyanshu.leftLeg.kneePivot.rotation.x = 1.45 - dangle * 0.5;
-                priyanshu.rightLeg.kneePivot.rotation.x = 1.45 + dangle * 0.5;
-
-                // Cinematic Orbiting Camera around the Seated Couple
-                const camAngle = playerPhys.yaw + 0.35 + Math.sin(elapsed * 0.25) * 0.35 + cameraAzimuth;
-                const camRadius = 4.2;
-                const targetCamX = midX + Math.sin(camAngle) * camRadius;
-                const targetCamZ = midZ + Math.cos(camAngle) * camRadius;
-                camera.position.x += (targetCamX - camera.position.x) * Math.min(1, 5 * dt);
-                camera.position.z += (targetCamZ - camera.position.z) * Math.min(1, 5 * dt);
-                camera.position.y += (baseH + 2.15 - camera.position.y) * Math.min(1, 5 * dt);
-                camera.lookAt(midX, baseH + 1.45, midZ);
-            }
-
-            // 3. REAL PENDULUM PHYSICS SAKURA TREE SWING (Priyanshu Pushing Ria)
-            else if (coupleState.subMode === 'SWING') {
-                const sw = COUPLE_ACTIVITIES[1];
-                const baseH = getTerrainHeight(sw.x, sw.z);
-
-                // Nonlinear Pendulum Differential Equation: alpha = -(g / L) * sin(theta) - damping * omega
-                const alpha = -(coupleState.swingGravity / coupleState.swingLength) * Math.sin(coupleState.swingTheta) - 0.18 * coupleState.swingOmega;
-                coupleState.swingOmega += alpha * dt;
-                coupleState.swingTheta += coupleState.swingOmega * dt;
-
-                // Rotate the 3D Swing Ropes & Seat Pivot
-                if (animatedProps.swingSeatPivot) {
-                    animatedProps.swingSeatPivot.rotation.x = coupleState.swingTheta;
-                }
-
-                // Compute exact 3D world position of the swinging wooden seat
-                const pivotY = baseH + 4.8;
-                const seatLocalY = -Math.cos(coupleState.swingTheta) * coupleState.swingLength;
-                const seatLocalZ = Math.sin(coupleState.swingTheta) * coupleState.swingLength;
-
-                // Position Ria seated on the moving swing seat!
-                riaPhys.x = sw.x;
-                riaPhys.y = pivotY + seatLocalY - 1.15;
-                riaPhys.z = sw.z + seatLocalZ;
-                riaPhys.yaw = 0;
-
-                ria.bodyPivot.position.set(0, 0, 0);
-                ria.bodyPivot.rotation.set(coupleState.swingTheta * 0.85, 0, 0);
-                ria.leftLeg.hipPivot.position.y = 1.05;
-                ria.rightLeg.hipPivot.position.y = 1.05;
-                ria.leftLeg.hipPivot.rotation.x = -1.35;
-                ria.rightLeg.hipPivot.rotation.x = -1.35;
-                // Ria pumps her legs with the swing velocity!
-                const legPump = Math.max(-0.5, Math.min(0.6, -coupleState.swingOmega * 0.25));
-                ria.leftLeg.kneePivot.rotation.x = 1.15 + legPump;
-                ria.rightLeg.kneePivot.rotation.x = 1.15 + legPump;
-
-                // Ria's hands grip the twin swing ropes
-                ria.leftArm.shoulderPivot.rotation.set(-1.25, 0, -0.18);
-                ria.leftArm.elbowPivot.rotation.set(-0.65, 0, 0);
-                ria.rightArm.shoulderPivot.rotation.set(-1.25, 0, 0.18);
-                ria.rightArm.elbowPivot.rotation.set(-0.65, 0, 0);
-
-                // Secondary Hair & Ribbon Wind Physics on the Swing
-                ria.ponytailPivot.rotation.x = 0.45 + Math.max(0, coupleState.swingOmega * 0.32);
-                ria.ribbonPivot.rotation.x = 0.35 + Math.abs(coupleState.swingOmega) * 0.25;
-
-                // Expressive Anime Face changes dynamically with Swing Height!
-                const arcDeg = Math.round(Math.abs(coupleState.swingTheta) * (180 / Math.PI));
-                document.getElementById('swing-height-meter').textContent = `Arc: ${arcDeg}°`;
-                if (arcDeg > 38) {
-                    ria.face.setState('love', false);
-                    if (Math.random() < 0.25) emitHeartBurst(riaPhys.x, riaPhys.y + 1.8, riaPhys.z, 1);
-                } else if (arcDeg > 20) {
-                    ria.face.setState('wink_tongue', false);
-                } else {
-                    ria.face.setState('happy', false);
-                }
-
-                // Position Priyanshu standing behind the swing ready to push Ria
-                playerPhys.x = sw.x;
-                playerPhys.z = sw.z - 1.95;
-                playerPhys.y = baseH;
-                playerPhys.yaw = 0;
-
-                if (coupleState.swingPushAnimTimer > 0) {
-                    coupleState.swingPushAnimTimer -= dt;
-                    // Priyanshu leans forward extending both arms to push Ria's back gently
-                    priyanshu.bodyPivot.rotation.x = 0.24;
-                    priyanshu.leftArm.shoulderPivot.rotation.set(-1.35, 0, 0.1);
-                    priyanshu.rightArm.shoulderPivot.rotation.set(-1.35, 0, -0.1);
-                    priyanshu.face.setState('love', false);
-                } else {
-                    priyanshu.bodyPivot.rotation.x = 0.04;
-                    priyanshu.leftArm.shoulderPivot.rotation.set(-0.45, 0, 0.1);
-                    priyanshu.rightArm.shoulderPivot.rotation.set(-0.45, 0, -0.1);
-                    priyanshu.face.setState('happy', false);
-                }
-
-                updateCharacterTransforms();
-
-                // Side-Three-Quarter Anime Camera framing the whole Tree Swing Arc
-                const targetCamX = sw.x + 6.4 * Math.cos(cameraAzimuth);
-                const targetCamZ = sw.z + 2.8 * Math.sin(cameraAzimuth);
-                camera.position.x += (targetCamX - camera.position.x) * Math.min(1, 5 * dt);
-                camera.position.z += (targetCamZ - camera.position.z) * Math.min(1, 5 * dt);
-                camera.position.y += (baseH + 3.2 - camera.position.y) * Math.min(1, 5 * dt);
-                camera.lookAt(sw.x, baseH + 2.4, sw.z + seatLocalZ * 0.4);
-            }
-
-            // 4. KOI RIVER ROWBOAT HYDRODYNAMICS & DUAL-OAR ROWING PHYSICS
-            else if (coupleState.subMode === 'BOAT') {
-                const forwardInput = -inputZ; // W / Up rows forward
-                const turnInput = -inputX;    // A / D steers boat yaw
-
-                // Rotational steering & water angular damping
-                coupleState.boatOmega += turnInput * 2.4 * dt;
-                coupleState.boatOmega *= Math.pow(0.18, dt);
-                coupleState.boatYaw += coupleState.boatOmega * dt;
-
-                // Oar thrust along boat heading + hydrodynamic water drag
-                const thrust = forwardInput * 9.5;
-                const dirX = Math.sin(coupleState.boatYaw);
-                const dirZ = Math.cos(coupleState.boatYaw);
-
-                coupleState.boatVx += dirX * thrust * dt;
-                coupleState.boatVz += dirZ * thrust * dt;
-                coupleState.boatVx *= Math.pow(0.32, dt);
-                coupleState.boatVz *= Math.pow(0.32, dt);
-
-                coupleState.boatX += coupleState.boatVx * dt;
-                coupleState.boatZ += coupleState.boatVz * dt;
-
-                // Constrain boat smoothly within the Koi River channel (x: 71.5 to 84.5, z: -42 to 72)
-                if (coupleState.boatX < 72.2) { coupleState.boatX = 72.2; coupleState.boatVx *= -0.4; }
-                if (coupleState.boatX > 83.8) { coupleState.boatX = 83.8; coupleState.boatVx *= -0.4; }
-                if (coupleState.boatZ < -40)  { coupleState.boatZ = -40;  coupleState.boatVz *= -0.4; }
-                if (coupleState.boatZ > 70)   { coupleState.boatZ = 70;   coupleState.boatVz *= -0.4; }
-
-                const boatSpd = Math.hypot(coupleState.boatVx, coupleState.boatVz);
-                if ( Math.abs(forwardInput) > 0.1 || Math.abs(turnInput) > 0.1 ) {
-                    coupleState.oarRowPhase += dt * 5.2;
-                }
-
-                // Buoyancy bobbing, pitch & roll on water waves
-                const bobY = 0.16 + Math.sin(elapsed * 2.6) * 0.045;
-                const pitch = Math.sin(elapsed * 2.1) * 0.035 + (boatSpd * 0.012);
-                const roll = Math.cos(elapsed * 1.8) * 0.04 - coupleState.boatOmega * 0.08;
-
-                if (animatedProps.rowboatGroup) {
-                    animatedProps.rowboatGroup.position.set(coupleState.boatX, bobY, coupleState.boatZ);
-                    animatedProps.rowboatGroup.rotation.set(pitch, coupleState.boatYaw, roll);
-                }
-
-                // Dual Oar sweeping animation + Priyanshu's upper body rowing motion
-                const sweep = Math.sin(coupleState.oarRowPhase) * 0.55;
-                const dip = Math.cos(coupleState.oarRowPhase) * 0.22;
-                if (animatedProps.leftOarPivot && animatedProps.rightOarPivot) {
-                    animatedProps.leftOarPivot.rotation.set(dip, sweep, 0);
-                    animatedProps.rightOarPivot.rotation.set(dip, -sweep, 0);
-                }
-
-                // Spawn water wake rings while rowing
-                if (boatSpd > 0.8 && Math.random() < 0.18) {
-                    const wake = new THREE.Mesh(
-                        new THREE.RingGeometry(0.7, 0.95, 24),
-                        new THREE.MeshBasicMaterial({ color: 0x7dd3fc, side: THREE.DoubleSide, transparent: true, opacity: 0.55 })
-                    );
-                    wake.rotation.x = -Math.PI / 2;
-                    wake.position.set(coupleState.boatX, 0.09, coupleState.boatZ);
-                    scene.add(wake);
-                    animatedProps.bellWaveRings.push({ mesh: wake, scale: 1, alpha: 0.55 });
-                }
-
-                // Position Priyanshu on the Rower Seat & Ria facing him on the Bow Seat
-                playerPhys.x = coupleState.boatX - dirX * 0.45;
-                playerPhys.z = coupleState.boatZ - dirZ * 0.45;
-                playerPhys.y = bobY + 0.05;
-                playerPhys.yaw = coupleState.boatYaw;
-
-                riaPhys.x = coupleState.boatX + dirX * 0.85;
-                riaPhys.z = coupleState.boatZ + dirZ * 0.85;
-                riaPhys.y = bobY + 0.05;
-                riaPhys.yaw = coupleState.boatYaw + Math.PI; // Facing Priyanshu!
-
-                applySeatedCharacterPose(priyanshu, false);
-                applySeatedCharacterPose(ria, true);
-
-                // Priyanshu's arms row in sync with the oars
-                priyanshu.bodyPivot.rotation.x = -0.05 + Math.sin(coupleState.oarRowPhase) * 0.18;
-                priyanshu.leftArm.shoulderPivot.rotation.set(-0.75 + sweep * 0.6, 0, 0.25);
-                priyanshu.rightArm.shoulderPivot.rotation.set(-0.75 + sweep * 0.6, 0, -0.25);
-
-                updateCharacterTransforms();
-
-                // Scenic River Camera
-                const camAngle = coupleState.boatYaw + 0.65 + cameraAzimuth;
-                const targetCamX = coupleState.boatX - Math.sin(camAngle) * 6.5;
-                const targetCamZ = coupleState.boatZ - Math.cos(camAngle) * 6.5;
-                camera.position.x += (targetCamX - camera.position.x) * Math.min(1, 6 * dt);
-                camera.position.z += (targetCamZ - camera.position.z) * Math.min(1, 6 * dt);
-                camera.position.y += (2.85 - camera.position.y) * Math.min(1, 6 * dt);
-                camera.lookAt(coupleState.boatX, 1.35, coupleState.boatZ);
-            }
-        }
-
-        function updateCutsceneCamera(dt, elapsed) {
-            const midX = (playerPhys.x + riaPhys.x) * 0.5;
-            const midZ = (playerPhys.z + riaPhys.z) * 0.5;
-            const groundY = playerPhys.y;
-
-            ria.bodyPivot.position.y = Math.sin(elapsed * 3) * 0.025;
-
-            let targetCamX, targetCamY, targetCamZ;
-            let lookTargetX = midX, lookTargetY = groundY + 1.9, lookTargetZ = midZ;
-
-            if (cutsceneFocusMode === 'PRIYANSHU_KNEEL') {
-                targetCamX = midX + Math.sin(cameraAzimuth + 0.55) * 3.1;
-                targetCamZ = midZ + Math.cos(cameraAzimuth + 0.55) * 3.1;
-                targetCamY = groundY + 2.05;
-                lookTargetY = groundY + 1.75;
-            } else if (cutsceneFocusMode === 'RIA_BLUSH') {
-                targetCamX = riaPhys.x - 1.4;
-                targetCamZ = riaPhys.z + 1.9;
-                targetCamY = groundY + 2.55;
-                lookTargetX = riaPhys.x;
-                lookTargetY = groundY + 2.35;
-                lookTargetZ = riaPhys.z;
-            } else {
-                cutsceneCameraAngle += dt * 0.32;
-                const orbitRadius = 4.2;
-                targetCamX = midX + Math.sin(cutsceneCameraAngle + cameraAzimuth) * orbitRadius;
-                targetCamZ = midZ + Math.cos(cutsceneCameraAngle + cameraAzimuth) * orbitRadius;
-                targetCamY = groundY + 2.4;
-            }
-
-            camera.position.x += (targetCamX - camera.position.x) * Math.min(1, 4.5 * dt);
-            camera.position.z += (targetCamZ - camera.position.z) * Math.min(1, 4.5 * dt);
-            camera.position.y += (targetCamY - camera.position.y) * Math.min(1, 4.5 * dt);
-
-            camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
-
-            if (currentState === GAME_STATE.CELEBRATION && Math.random() < 0.09) {
-                emitHeartBurst(midX + (Math.random() - 0.5) * 3, groundY + 2.6, midZ + (Math.random() - 0.5) * 3, 3);
-            }
         }
 
         window.addEventListener('resize', () => {
@@ -4620,7 +4758,7 @@
 
         window.onload = function () {
             resetGamePositions();
-            requestAnimationFrame(gameLoop);
+            animate();
         };
     </script>
 </body>
